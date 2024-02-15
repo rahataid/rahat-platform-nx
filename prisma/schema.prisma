@@ -201,6 +201,8 @@ model Beneficiary {
   id   Int    @id @default(autoincrement()) @db.Integer()
   uuid String @unique @default(uuid()) @db.Uuid()
 
+  customId String @unique
+
   firstName      String
   lastName       String
   gender         Gender         @default(UNKNOWN)
@@ -273,10 +275,10 @@ enum ProjectStatus {
 // ++++++++++++++++++ START: @rahat/stats - Statistics ++++++++++++++++++++
 
 model Stats {
-  name      String    @id @unique
-  data      Json
-  group     String?
-  
+  name  String  @id @unique
+  data  Json
+  group String?
+
   createdAt DateTime  @default(now())
   updatedAt DateTime? @updatedAt()
 

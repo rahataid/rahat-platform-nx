@@ -1,10 +1,10 @@
-import { NestFactory } from '@nestjs/core';
-import { Transport, MicroserviceOptions } from '@nestjs/microservices';
-import { AppModule } from './app/app.module';
 import { Logger } from '@nestjs/common';
+import { NestFactory } from '@nestjs/core';
+import { MicroserviceOptions, Transport } from '@nestjs/microservices';
+import { AppModule } from './app/app.module';
 
 async function bootstrap() {
-  const PORT: number = +process.env.PORT;
+  const PORT: number = +process.env.PORT_BEN;
   const app = await NestFactory.createMicroservice<MicroserviceOptions>(
     AppModule,
     {

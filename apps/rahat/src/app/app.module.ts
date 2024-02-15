@@ -1,5 +1,5 @@
 import { BullModule } from '@nestjs/bull';
-import { Module } from '@nestjs/common';
+import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { StatsModule } from '@rahat/stats';
@@ -8,6 +8,7 @@ import { SettingsModule } from '@rumsan/settings';
 import { RumsanUsersModule } from '@rumsan/user';
 import { BeneficiaryModule } from '../beneficiary/beneficiary.module';
 import { ListenersModule } from '../listeners/listeners.module';
+import { BufferMiddleware } from '../middleware';
 import { RahatProcessor } from '../processors';
 import { ProjectModule } from '../projects/projects.module';
 import { AppController } from './app.controller';
@@ -39,4 +40,8 @@ import { AppService } from './app.service';
   controllers: [AppController],
   providers: [AppService, RahatProcessor],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(BufferMiddleware).forRoutes('*');
+  }
+}

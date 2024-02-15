@@ -50,6 +50,19 @@ export class BeneficiaryController {
     return this.client.send({ cmd: JOBS.BENEFICIARY.CREATE }, dto);
   }
 
+  @Post('upload-json')
+  async uploadBeneficiaries(@Body() bufferData: Buffer) {
+    const beneficiaries = await DocParser(
+      Enums.UploadFileType.JSON,
+      bufferData
+    );
+
+    return this.client.send(
+      { cmd: JOBS.BENEFICIARY.CREATE_BULK },
+      beneficiaries
+    );
+  }
+
   @Post('bulk')
   @UseInterceptors(FileInterceptor('file'))
   async uploadBulk(@UploadedFile() file: TFile, @Req() req: Request) {
