@@ -1,13 +1,23 @@
 {
   "$schema": "./node_modules/nx/schemas/nx-schema.json",
+  "tasksRunnerOptions": {
+    "default": {
+      "runner": "nx/tasks-runners/default",
+      "options": {
+        "cacheableOperations": ["build", "lint", "test", "mainBuild"]
+      }
+    }
+  },
   "targetDefaults": {
     "build": {
-      "cache": true,
       "dependsOn": ["^build"],
-      "inputs": ["production", "^production"]
+      "outputs": ["{projectRoot}/dist"]
+    },
+    "mainBuild": {
+      "dependsOn": ["sdk:build", "stats:build"]
     },
     "lint": {
-      "cache": true,
+      "dependsOn": ["^lint"],
       "inputs": [
         "default",
         "{workspaceRoot}/.eslintrc.json",
@@ -15,32 +25,24 @@
         "{workspaceRoot}/eslint.config.js"
       ]
     },
-    "@nx/jest:jest": {
+    "test": {
+      "inputs": ["default", "^default", "{workspaceRoot}/jest.preset.js"]
+    },
+    "@nx/js:tsc": {
       "cache": true,
-      "inputs": ["default", "^production", "{workspaceRoot}/jest.preset.js"],
-      "options": {
-        "passWithNoTests": true
-      },
-      "configurations": {
-        "ci": {
-          "ci": true,
-          "codeCoverage": true
-        }
-      }
+      "dependsOn": ["^build"],
+      "inputs": ["default", "^default"]
     }
   },
-  "namedInputs": {
-    "default": ["{projectRoot}/**/*", "sharedGlobals"],
-    "production": [
-      "default",
-      "!{projectRoot}/**/?(*.)+(spec|test).[jt]s?(x)?(.snap)",
-      "!{projectRoot}/tsconfig.spec.json",
-      "!{projectRoot}/jest.config.[jt]s",
-      "!{projectRoot}/src/test-setup.[jt]s",
-      "!{projectRoot}/test-setup.[jt]s",
-      "!{projectRoot}/.eslintrc.json",
-      "!{projectRoot}/eslint.config.js"
-    ],
-    "sharedGlobals": []
-  }
+  "affected": {
+    "defaultBase": "main"
+  },
+  "plugins": [
+    {
+      "plugin": "@nx/eslint/plugin",
+      "options": {
+        "targetName": "lint"
+      }
+    }
+  ]
 }

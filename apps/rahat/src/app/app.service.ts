@@ -1,11 +1,11 @@
 import { Injectable } from '@nestjs/common';
-import { UserService, User } from '@rumsan/user';
+import { SettingsService } from '@rumsan/extensions/settings';
 
 @Injectable()
 export class AppService {
-  constructor(private userService: UserService) {}
   async getData() {
-    const test: User = await this.userService.getById(1);
-    return test;
+    //const test = await this.userService.getById(1);
+    console.log(SettingsService.get('SMTP.HOST'));
+    return {};
   }
 }

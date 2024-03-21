@@ -5,16 +5,28 @@
   "projectType": "application",
   "targets": {
     "build": {
+      "dependsOn": ["mainBuild"],
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": [
+          {
+            "command": "cp -r prisma/ dist/apps/rahat/prisma && node apps/rahat/modify-package.js"
+          }
+        ]
+      }
+    },
+    "mainBuild": {
       "executor": "@nx/webpack:webpack",
       "outputs": ["{options.outputPath}"],
-      "defaultConfiguration": "production",
       "options": {
         "target": "node",
         "compiler": "tsc",
+        "generatePackageJson": true,
         "outputPath": "dist/apps/rahat",
         "main": "apps/rahat/src/main.ts",
         "tsConfig": "apps/rahat/tsconfig.app.json",
-        "assets": ["apps/rahat/src/assets"],
+        "assets": [],
+        "isolatedConfig": true,
         "webpackConfig": "apps/rahat/webpack.config.js"
       },
       "configurations": {
@@ -35,17 +47,6 @@
         "production": {
           "buildTarget": "rahat:build:production"
         }
-      }
-    },
-    "lint": {
-      "executor": "@nx/eslint:lint",
-      "outputs": ["{options.outputFile}"]
-    },
-    "test": {
-      "executor": "@nx/jest:jest",
-      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
-      "options": {
-        "jestConfig": "apps/rahat/jest.config.ts"
       }
     }
   },

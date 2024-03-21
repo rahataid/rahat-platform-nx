@@ -1,0 +1,54 @@
+{
+  "name": "beneficiary",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "apps/beneficiary/src",
+  "projectType": "application",
+  "targets": {
+    "build": {
+      "dependsOn": ["mainBuild"],
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": [
+          {
+            "command": "cp -r prisma/ dist/apps/beneficiary/prisma && cp -r apps/beneficiary/src/assets dist/apps/beneficiary/assets/ && node apps/beneficiary/modify-package.js"
+          }
+        ]
+      }
+    },
+    "mainBuild": {
+      "executor": "@nx/webpack:webpack",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "target": "node",
+        "compiler": "tsc",
+        "generatePackageJson": true,
+        "outputPath": "dist/apps/beneficiary",
+        "main": "apps/beneficiary/src/main.ts",
+        "tsConfig": "apps/beneficiary/tsconfig.app.json",
+        "assets": [],
+        "isolatedConfig": true,
+        "webpackConfig": "apps/beneficiary/webpack.config.js"
+      },
+      "configurations": {
+        "development": {},
+        "production": {}
+      }
+    },
+    "serve": {
+      "executor": "@nx/js:node",
+      "defaultConfiguration": "development",
+      "options": {
+        "buildTarget": "beneficiary:build"
+      },
+      "configurations": {
+        "development": {
+          "buildTarget": "beneficiary:build:development"
+        },
+        "production": {
+          "buildTarget": "beneficiary:build:production"
+        }
+      }
+    }
+  },
+  "tags": []
+}
