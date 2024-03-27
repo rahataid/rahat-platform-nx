@@ -1,17 +1,12 @@
-name: Dev Rahat CI/CD
+name: Stage Root CI/CD
 on:
-  push:
-    branches:
-      - 'dev'
-    paths:
-      - 'apps/rahat-e2e/**'
-
-  pull_request:
-    branches:
-      - 'dev'
-    paths:
-      - 'apps/rahat/**'
-      - 'apps/rahat-e2e/**'
+  # push:
+  #   branches:
+  #     - 'stage'
+  # pull_request:
+  #   branches:
+  #     - 'stage'
+  workflow_dispatch:
 
 env:
   CI: false
@@ -37,7 +32,7 @@ jobs:
           npm install -g pnpm
           pnpm install
           pnpm prisma:generate
-          pnpm build:rahat
+          pnpm build:all
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -48,6 +43,17 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
+      # Beneficiary Image
+      - name: build && push beneficiary
+        id: build-push-beneficiary
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: Dockerfile.beneficiary
+          # push: ${{ github.event_name == 'push' && 'true' || 'false' }}
+          push: true
+          tags: esatya/rahat-platform-beneficiary:stage
+
       # Rahat Image
       - name: build && push rahat
         id: build-push-rahat
@@ -55,5 +61,6 @@ jobs:
         with:
           context: .
           file: Dockerfile.rahat
-          push: ${{ github.event_name == 'push' && 'true' || 'false' }}
-          tags: esatya/rahat-platform-rahat:dev
+          # push: ${{ github.event_name == 'push' && 'true' || 'false' }}
+          push: true
+          tags: esatya/rahat-platform-rahat:stage
