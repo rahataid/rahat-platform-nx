@@ -71,17 +71,18 @@ Follow the following steps to run rahat on a local docker development environmen
 ### Step 1
 
 Ensure that you have the following key-value pairs in your .env file.
+
 ```text
 EL_PROJECT_DIR=<path-to-your-el-project-codebase>
 ENVIRONMENT=local
 ```
 
 Example:
+
 ```text
 EL_PROJECT_DIR=/home/user/rumsan/projects/rahat/rahat-projects
 ENVIRONMENT=local
 ```
-
 
 Run the following command and follow the instructions.
 
@@ -95,6 +96,7 @@ Go to your rahat deployment worker's directory.
 Ensure that for configurations, `REDIS_PORT` is set to `9736` in .env file.
 
 Example:
+
 ```text
 REDIS_HOST=localhost
 REDIS_PORT=9736
@@ -114,4 +116,3 @@ Make a `POST` request to `http://localhost:5500/v1/projects` with the required p
 Check the console of rahat deployment worker to confirm that the project container has started.
 
 You are now all set to develop Rahat using a containerized environment with hot-reloading enabled.
-
