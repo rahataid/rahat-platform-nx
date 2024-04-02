@@ -1,6 +1,10 @@
 # Rahat Platform
 
+<<<<<<< HEAD
 ## Overview
+=======
+## Overview 
+>>>>>>> dev
 
 Rahat Platform serves as a monorepo specifically designed to streamline the management and advancement of Rahat Core. Rahat stands as the Aid Distribution platform powered by Blockchain Technology, revolutionizing the aid distribution process.
 
@@ -71,6 +75,7 @@ Follow the following steps to run rahat on a local docker development environmen
 ### Step 1
 
 Ensure that you have the following key-value pairs in your .env file.
+<<<<<<< HEAD
 
 ```text
 EL_PROJECT_DIR=<path-to-your-el-project-codebase>
@@ -84,6 +89,22 @@ EL_PROJECT_DIR=/home/user/rumsan/projects/rahat/rahat-projects
 ENVIRONMENT=local
 ```
 
+=======
+```text
+ENVIRONMENT=local
+RAHAT_UI_DIR=<path-to-your-rahat-ui-codebase>
+EL_PROJECT_DIR=<path-to-your-el-project-codebase>
+```
+
+Example:
+```text
+ENVIRONMENT=local
+RAHAT_UI_DIR=/home/user/rumsan/projects/rahat/rahat-ui
+EL_PROJECT_DIR=/home/user/rumsan/projects/rahat/rahat-projects
+```
+
+
+>>>>>>> dev
 Run the following command and follow the instructions.
 
 ```sh
@@ -96,7 +117,10 @@ Go to your rahat deployment worker's directory.
 Ensure that for configurations, `REDIS_PORT` is set to `9736` in .env file.
 
 Example:
+<<<<<<< HEAD
 
+=======
+>>>>>>> dev
 ```text
 REDIS_HOST=localhost
 REDIS_PORT=9736
@@ -116,3 +140,7 @@ Make a `POST` request to `http://localhost:5500/v1/projects` with the required p
 Check the console of rahat deployment worker to confirm that the project container has started.
 
 You are now all set to develop Rahat using a containerized environment with hot-reloading enabled.
+<<<<<<< HEAD
+=======
+
+>>>>>>> dev

@@ -76,4 +76,9 @@ else
     build_new_el_image
 fi
 
+<<<<<<< HEAD
+=======
+run_rahat_ui
+
+>>>>>>> dev
 echo "Done."
