@@ -56,18 +56,14 @@ export const MS_ACTIONS = {
   },
   USER: {},
   ELPROJECT: {
-    REDEEM_VOUCHER:'elProject.redeemVoucher',
-    PROCESS_OTP:'elProject.processOtp',
-    ASSIGN_DISCOUNT_VOUCHER:'elProject.discountVoucher',
-    REQUEST_REDEMPTION:'elProject.requestRedemption',
-    UPDATE_REDEMPTION:'elProject.updateRedemption',
-    LIST_REDEMPTION:'elProject.listRedemption',
-<<<<<<< HEAD
-    GET_VENDOR_REDEMPTION:'elProject.vendorRedemption'
-=======
-    GET_VENDOR_REDEMPTION:'elProject.vendorRedemption',
-    GET_VENDOR_REFERRER:'elProject.beneficiaryReferred'
->>>>>>> dev
+    REDEEM_VOUCHER: 'elProject.redeemVoucher',
+    PROCESS_OTP: 'elProject.processOtp',
+    ASSIGN_DISCOUNT_VOUCHER: 'elProject.discountVoucher',
+    REQUEST_REDEMPTION: 'elProject.requestRedemption',
+    UPDATE_REDEMPTION: 'elProject.updateRedemption',
+    LIST_REDEMPTION: 'elProject.listRedemption',
+    GET_VENDOR_REDEMPTION: 'elProject.vendorRedemption',
+    GET_VENDOR_REFERRER: 'elProject.beneficiaryReferred',
   },
   SETTINGS: {
     LIST: 'settings.list',
