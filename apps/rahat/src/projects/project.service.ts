@@ -147,6 +147,15 @@ export class ProjectService {
               {cmd:ProjectJobs.GET_VENDOR_REDEMPTION,uuid},
               payload
               ).pipe(timeout(500000))
+<<<<<<< HEAD
+=======
+      case MS_ACTIONS.ELPROJECT.GET_VENDOR_REFERRER:
+        return this.client
+              .send(
+                {cmd:BeneficiaryJobs.VENDOR_REFERRAL,uuid},
+                payload
+              ).pipe(timeout(50000))
+>>>>>>> dev
       default:
         throw new Error('Please provide a valid action!');
     }

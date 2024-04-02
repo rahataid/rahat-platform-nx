@@ -62,7 +62,12 @@ export const MS_ACTIONS = {
     REQUEST_REDEMPTION:'elProject.requestRedemption',
     UPDATE_REDEMPTION:'elProject.updateRedemption',
     LIST_REDEMPTION:'elProject.listRedemption',
+<<<<<<< HEAD
     GET_VENDOR_REDEMPTION:'elProject.vendorRedemption'
+=======
+    GET_VENDOR_REDEMPTION:'elProject.vendorRedemption',
+    GET_VENDOR_REFERRER:'elProject.beneficiaryReferred'
+>>>>>>> dev
   },
   SETTINGS: {
     LIST: 'settings.list',
