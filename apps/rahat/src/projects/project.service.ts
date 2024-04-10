@@ -39,6 +39,9 @@ export class ProjectService {
       case 'EL':
         SettingsService.get('EL')
         break;
+      case "C2C":
+        SettingsService.get('C2C')
+        break;
       default:
         throw new Error('Invalid project type.')
     }
