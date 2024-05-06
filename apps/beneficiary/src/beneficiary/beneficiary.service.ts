@@ -208,7 +208,6 @@ export class BeneficiaryService {
     //   data,
     // });
     const rdata = await AuditBeneficiary.create(this.rsprisma, userId, { data });
-    console.log('rdata', rdata)
     if (piiData) {
       await AuditBeneficiary.createPII(this.rsprisma, userId, {
         data: {
