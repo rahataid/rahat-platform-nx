@@ -12,11 +12,12 @@ import {
   Query,
   Req,
   UploadedFile,
+  UseGuards,
   UseInterceptors
 } from '@nestjs/common';
 import { ClientProxy, RpcException } from '@nestjs/microservices';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { ApiParam, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiParam, ApiTags } from '@nestjs/swagger';
 import {
   AddBenToProjectDto,
   CreateBeneficiaryDto,
@@ -25,10 +26,15 @@ import {
   ValidateWalletDto
 } from '@rahataid/extensions';
 import {
-  BeneficiaryJobs, BQUEUE, Enums,
+  ACTIONS,
+  APP,
+  BQUEUE,
+  BeneficiaryJobs,
+  Enums,
   MS_TIMEOUT,
   TFile
 } from '@rahataid/sdk';
+import { AbilitiesGuard, CheckAbilities, JwtGuard, SUBJECTS } from '@rumsan/user';
 import { Queue } from 'bull';
 import { UUID } from 'crypto';
 import { catchError, throwError, timeout } from 'rxjs';
@@ -54,6 +60,8 @@ function getDateInfo(dateString) {
 
 @Controller('beneficiaries')
 @ApiTags('Beneficiaries')
+@ApiBearerAuth(APP.JWT_BEARER)
+@UseGuards(JwtGuard, AbilitiesGuard)
 export class BeneficiaryController {
   constructor(
     @Inject('BEN_CLIENT') private readonly client: ClientProxy,
@@ -61,6 +69,7 @@ export class BeneficiaryController {
   ) { }
 
   @Get()
+  @CheckAbilities({ actions: ACTIONS.READ, subject: SUBJECTS.PUBLIC })
   async list(@Query() dto: ListBeneficiaryDto) {
     return this.client.send({ cmd: BeneficiaryJobs.LIST }, dto);
   }
@@ -81,8 +90,10 @@ export class BeneficiaryController {
   }
 
   @Post()
-  async create(@Body() dto: CreateBeneficiaryDto) {
-    return this.client.send({ cmd: BeneficiaryJobs.CREATE }, dto);
+  @CheckAbilities({ actions: ACTIONS.CREATE, subject: SUBJECTS.USER })
+  async create(@Body() dto: CreateBeneficiaryDto,
+    @Req() request: any) {
+    return this.client.send({ cmd: BeneficiaryJobs.CREATE }, { ...dto, userId: request.user.id });
   }
 
   @ApiParam({ name: 'uuid', required: true })

@@ -6,10 +6,11 @@ import { StatsModule } from '@rahat/stats';
 import { PrismaService } from '@rumsan/prisma';
 import { SettingsModule } from '@rumsan/settings';
 import {
+  AuditModule,
   AuthsModule,
-  RolesModule,
   RSUserModule,
-  UsersModule,
+  RolesModule,
+  UsersModule
 } from '@rumsan/user';
 import { BeneficiaryModule } from '../beneficiary/beneficiary.module';
 import { ListenersModule } from '../listeners/listeners.module';
@@ -42,6 +43,7 @@ import { AppService } from './app.service';
     ProjectModule,
     StatsModule,
     ProcessorsModule,
+    AuditModule
   ],
   controllers: [AppController],
   providers: [AppService, PrismaService],

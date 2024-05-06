@@ -28,6 +28,8 @@ model User {
   UserRole      UserRole[]
   Signup        Signup[]
   VendorProject ProjectVendors[]
+  Audit    Audit[]
+
 
   createdAt DateTime  @default(now())
   updatedAt DateTime? @updatedAt()
@@ -386,4 +388,32 @@ enum TransactionStatus {
   FAILED
 }
 
+
+
 // ++++++++++++++++++ END: @rahat/transactions - Transactions ++++++++++++++++++++++
+
+
+enum AuditOperation {
+  CREATE
+  CREATE_MANY
+  UPDATE
+  UPDATE_MANY
+  DELETE
+  DELETE_MANY
+  UPSERT
+}
+
+model Audit {
+  id        Int            @unique @default(autoincrement())
+  tableName String
+  operation AuditOperation
+  fieldName String
+  timestamp DateTime       @default(now())
+  updatedBy Int
+  value     String
+  version   Int
+
+  user User @relation(fields: [updatedBy], references: [id])
+
+  @@map("tbl_audits")
+}

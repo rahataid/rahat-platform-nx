@@ -28,7 +28,7 @@ export class BeneficiaryController {
   ) { }
 
   @MessagePattern({ cmd: BeneficiaryJobs.CREATE })
-  async create(@Payload() createBeneficiaryDto: CreateBeneficiaryDto) {
+  async create(@Payload() createBeneficiaryDto: CreateBeneficiaryDto & { userId: number }) {
     return this.service.create(createBeneficiaryDto);
   }
 

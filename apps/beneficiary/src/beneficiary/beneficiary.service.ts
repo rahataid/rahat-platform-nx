@@ -25,6 +25,7 @@ import { Queue } from 'bull';
 import { UUID } from 'crypto';
 import { v4 as uuidv4 } from 'uuid';
 import { isAddress } from 'viem';
+import { AuditBeneficiary } from '../utils/audit.util';
 import { createListQuery } from './helpers';
 
 const paginate: PaginatorTypes.PaginateFunction = paginator({ perPage: 20 });
@@ -179,8 +180,8 @@ export class BeneficiaryService {
     return mergedData;
   }
 
-  async create(dto: CreateBeneficiaryDto, projectUuid?: string) {
-    const { piiData, ...data } = dto;
+  async create(dto: CreateBeneficiaryDto & { userId: number }, projectUuid?: string) {
+    const { piiData, userId, ...data } = dto;
     if (!data.walletAddress) {
       data.walletAddress = generateRandomWallet().address;
     }
@@ -203,17 +204,27 @@ export class BeneficiaryService {
     });
     if (benData) throw new RpcException('Phone number should be unique');
     if (data.birthDate) data.birthDate = new Date(data.birthDate);
-    const rdata = await this.rsprisma.beneficiary.create({
-      data,
-    });
+    // const rdata = await this.rsprisma.beneficiary.create({
+    //   data,
+    // });
+    const rdata = await AuditBeneficiary.create(this.rsprisma, userId, { data });
+    console.log('rdata', rdata)
     if (piiData) {
-      await this.prisma.beneficiaryPii.create({
+      await AuditBeneficiary.createPII(this.rsprisma, userId, {
         data: {
           beneficiaryId: rdata.id,
           phone: piiData.phone ? piiData.phone.toString() : null,
           ...piiData,
         },
-      });
+      }
+      )
+      // await this.prisma.beneficiaryPii.create({
+      //   data: {
+      //     beneficiaryId: rdata.id,
+      //     phone: piiData.phone ? piiData.phone.toString() : null,
+      //     ...piiData,
+      //   },
+      // });
     }
     this.eventEmitter.emit(BeneficiaryEvents.BENEFICIARY_CREATED, {
       projectUuid,
@@ -279,7 +290,7 @@ export class BeneficiaryService {
     return beneficiary;
   }
 
-  async addBeneficiaryToProject(dto: AddBenToProjectDto, projectUid: UUID) {
+  async addBeneficiaryToProject(dto: AddBenToProjectDto & { userId: number }, projectUid: UUID) {
     const { type, referrerBeneficiary, referrerVendor, ...rest } = dto;
     // 1. Create Beneficiary
     const benef = await this.create(rest, projectUid);
