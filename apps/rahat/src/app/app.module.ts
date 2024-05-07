@@ -3,10 +3,10 @@ import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { StatsModule } from '@rahat/stats';
+import { AuditModule } from '@rumsan/extensions/audits';
 import { PrismaService } from '@rumsan/prisma';
 import { SettingsModule } from '@rumsan/settings';
 import {
-  AuditModule,
   AuthsModule,
   RSUserModule,
   RolesModule,

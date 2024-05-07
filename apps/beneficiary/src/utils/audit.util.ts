@@ -1,6 +1,5 @@
 import { AuditOperation, Prisma, PrismaClient } from '@prisma/client'
-import { auditTransact } from '@rumsan/prisma'
-
+import { auditTransact } from '@rumsan/extensions/audits'
 
 export const AuditBeneficiary = {
   create: (prisma: PrismaClient, userId: number, payload: Prisma.BeneficiaryCreateArgs) =>
