@@ -94,7 +94,7 @@ export class BeneficiaryController {
   }
 
   @MessagePattern({ cmd: BeneficiaryJobs.UPDATE })
-  update(@Param('uuid') uuid: UUID, @Payload() dto: UpdateBeneficiaryDto) {
+  update(@Param('uuid') uuid: UUID, @Payload() dto: UpdateBeneficiaryDto & { userId: number }) {
     const benefUUID = uuid ? uuid : dto.uuid;
     return this.service.update(benefUUID, dto);
   }

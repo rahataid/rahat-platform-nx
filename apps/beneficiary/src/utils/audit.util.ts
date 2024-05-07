@@ -3,26 +3,45 @@ import { auditTransact } from '@rumsan/prisma'
 
 
 export const AuditBeneficiary = {
-  create: (prisma: PrismaClient, userId: number, data: Prisma.BeneficiaryCreateArgs) =>
+  create: (prisma: PrismaClient, userId: number, payload: Prisma.BeneficiaryCreateArgs) =>
     auditTransact(prisma, {
       userId,
       operation: AuditOperation.CREATE,
+      rowIdKey: 'id',
       tableName: 'tbl_beneficiaries',
-    })(prisma.beneficiary.create, data),
+      args: payload,
+      operationFunction: (tx, p) => tx.beneficiary.create(p)
+    }),
 
-
-  createPII: (prisma: PrismaClient, userId: number, data: Prisma.BeneficiaryPiiCreateArgs) =>
+  createPII: (prisma: PrismaClient, userId: number, payload: Prisma.BeneficiaryPiiCreateArgs) =>
     auditTransact(prisma, {
       userId,
       operation: AuditOperation.CREATE,
       tableName: 'tbl_beneficiaries_pii',
-    })(prisma.beneficiaryPii.create, data),
+      rowIdKey: 'beneficiaryId',
+      args: payload,
+      operationFunction: (tx, p) => tx.beneficiaryPii.create(p)
+    }),
 
-  update: (prisma: PrismaClient, userId: number, data: Prisma.BeneficiaryUpdateArgs) =>
+  update: (prisma: PrismaClient, userId: number, payload: Prisma.BeneficiaryUpdateArgs) =>
     auditTransact(prisma, {
       userId,
       operation: AuditOperation.UPDATE,
       tableName: 'tbl_beneficiaries',
-    })(prisma.beneficiary.update, data),
+      rowIdKey: 'id',
+      args: payload,
+      operationFunction: (tx, p) => tx.beneficiary.update(p)
+    }),
+
+  updatePII: (prisma: PrismaClient, userId: number, payload: Prisma.BeneficiaryPiiUpdateArgs) =>
+    auditTransact(prisma, {
+      userId,
+      operation: AuditOperation.UPDATE,
+      tableName: 'tbl_beneficiaries_pii',
+      rowIdKey: 'beneficiaryId',
+      args: payload,
+      operationFunction: (tx, p) =>
+        tx.beneficiaryPii.update(p)
+    }),
 }
 

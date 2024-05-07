@@ -411,6 +411,7 @@ model Audit {
   timestamp DateTime       @default(now())
   updatedBy Int
   value     String
+  rowId     Int
   version   Int
 
   user User @relation(fields: [updatedBy], references: [id])

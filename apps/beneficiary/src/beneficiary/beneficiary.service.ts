@@ -425,7 +425,7 @@ export class BeneficiaryService {
   //   });
   // }
 
-  async update(uuid: UUID, dto: UpdateBeneficiaryDto) {
+  async update(uuid: UUID, dto: UpdateBeneficiaryDto & { userId: number }) {
     const findUuid = await this.prisma.beneficiary.findUnique({
       where: {
         uuid,
@@ -433,26 +433,37 @@ export class BeneficiaryService {
     });
 
     if (!findUuid) throw new Error('Data not Found');
-    const { piiData, ...rest } = dto;
+    const { piiData, userId, ...rest } = dto;
 
-    const rdata = await this.prisma.beneficiary.update({
+    const rdata = await AuditBeneficiary.update(this.rsprisma, userId, {
       where: {
         uuid,
       },
       data: rest,
     });
-    if (dto.piiData) await this.updatePIIByBenefUUID(uuid, piiData);
+
+    // const rdata = await this.prisma.beneficiary.update({
+    //   where: {
+    //     uuid,
+    //   },
+    //   data: rest,
+    // });
+    if (dto.piiData) await this.updatePIIByBenefUUID(uuid, piiData, userId);
     this.eventEmitter.emit(BeneficiaryEvents.BENEFICIARY_UPDATED);
     return rdata;
   }
 
-  async updatePIIByBenefUUID(benefUUID: UUID, piiData: TPIIData) {
+  async updatePIIByBenefUUID(benefUUID: UUID, piiData: TPIIData, userId: number) {
     const beneficiary = await this.findOne(benefUUID);
     if (beneficiary) {
-      return this.rsprisma.beneficiaryPii.update({
+      return AuditBeneficiary.updatePII(this.rsprisma, userId, {
         where: { beneficiaryId: beneficiary.id },
         data: piiData,
       });
+      // return this.rsprisma.beneficiaryPii.update({
+      //   where: { beneficiaryId: beneficiary.id },
+      //   data: piiData,
+      // });
     }
   }
 

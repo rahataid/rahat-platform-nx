@@ -166,9 +166,11 @@ export class BeneficiaryController {
   }
 
   @Patch(':uuid')
+  @CheckAbilities({ actions: ACTIONS.UPDATE, subject: SUBJECTS.USER })
+
   @ApiParam({ name: 'uuid', required: true })
-  async update(@Param('uuid') uuid: UUID, @Body() dto: UpdateBeneficiaryDto) {
-    return this.client.send({ cmd: BeneficiaryJobs.UPDATE }, { uuid, ...dto });
+  async update(@Param('uuid') uuid: UUID, @Body() dto: UpdateBeneficiaryDto, @Req() request: any) {
+    return this.client.send({ cmd: BeneficiaryJobs.UPDATE }, { uuid, userId: request.user.id, ...dto, });
   }
 
   @Patch('remove/:uuid')
