@@ -109,7 +109,7 @@ export class ProjectService {
         ) {
           this.eventEmitter.emit(
             ProjectEvents.VOUCHER_REDEMPTION_SUCCSESS,
-            payload.dto
+            response.data
           );
         }
         //send message to all admin
