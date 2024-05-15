@@ -103,6 +103,15 @@ export class ProjectService {
             payload.dto
           );
         }
+
+        if (
+          response?.cmd === ProjectJobs.REDEEM_VOUCHER
+        ) {
+          this.eventEmitter.emit(
+            ProjectEvents.VOUCHER_REDEMPTION_SUCCSESS,
+            payload.dto
+          );
+        }
         //send message to all admin
         if (
           response?.id &&
