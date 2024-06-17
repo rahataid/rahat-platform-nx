@@ -328,6 +328,55 @@ CREATE TABLE "tbl_grievances" (
     CONSTRAINT "tbl_grievances_pkey" PRIMARY KEY ("id")
 );
 
+-- CreateTable
+CREATE TABLE "tbl_temp_beneficiaries" (
+    "id" SERIAL NOT NULL,
+    "uuid" UUID NOT NULL,
+    "firstName" TEXT NOT NULL,
+    "lastName" TEXT NOT NULL,
+    "govtIDNumber" TEXT,
+    "gender" "Gender" NOT NULL DEFAULT 'UNKNOWN',
+    "birthDate" TIMESTAMP(3),
+    "walletAddress" TEXT NOT NULL,
+    "phone" TEXT,
+    "email" TEXT,
+    "archived" BOOLEAN NOT NULL DEFAULT false,
+    "location" TEXT,
+    "latitude" DOUBLE PRECISION,
+    "longitude" DOUBLE PRECISION,
+    "notes" TEXT,
+    "bankedStatus" "BankedStatus" NOT NULL DEFAULT 'UNKNOWN',
+    "internetStatus" "InternetStatus" NOT NULL DEFAULT 'UNKNOWN',
+    "phoneStatus" "PhoneStatus" NOT NULL DEFAULT 'UNKNOWN',
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3),
+    "extras" JSONB,
+    "deletedAt" TIMESTAMP(3),
+
+    CONSTRAINT "tbl_temp_beneficiaries_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "tbl_temp_group" (
+    "id" SERIAL NOT NULL,
+    "uuid" UUID NOT NULL,
+    "name" TEXT NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "tbl_temp_group_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "tbl_temp_beneficiary_group" (
+    "id" SERIAL NOT NULL,
+    "uuid" UUID NOT NULL,
+    "tempGroupUID" UUID NOT NULL,
+    "tempBenefUID" UUID NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "tbl_temp_beneficiary_group_pkey" PRIMARY KEY ("id")
+);
+
 -- CreateIndex
 CREATE UNIQUE INDEX "tbl_users_uuid_key" ON "tbl_users"("uuid");
 
@@ -371,6 +420,9 @@ CREATE UNIQUE INDEX "tbl_grouped_beneficiaries_beneficiaryGroupId_beneficiaryId_
 CREATE UNIQUE INDEX "tbl_beneficiaries_group_uuid_key" ON "tbl_beneficiaries_group"("uuid");
 
 -- CreateIndex
+CREATE UNIQUE INDEX "tbl_beneficiaries_group_name_key" ON "tbl_beneficiaries_group"("name");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "tbl_beneficiaries_gorup_projects_uuid_key" ON "tbl_beneficiaries_gorup_projects"("uuid");
 
 -- CreateIndex
@@ -405,6 +457,21 @@ CREATE UNIQUE INDEX "tbl_transactions_uuid_key" ON "tbl_transactions"("uuid");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "tbl_grievances_uuid_key" ON "tbl_grievances"("uuid");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "tbl_temp_beneficiaries_uuid_key" ON "tbl_temp_beneficiaries"("uuid");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "tbl_temp_group_uuid_key" ON "tbl_temp_group"("uuid");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "tbl_temp_group_name_key" ON "tbl_temp_group"("name");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "tbl_temp_beneficiary_group_uuid_key" ON "tbl_temp_beneficiary_group"("uuid");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "tbl_temp_beneficiary_group_tempGroupUID_tempBenefUID_key" ON "tbl_temp_beneficiary_group"("tempGroupUID", "tempBenefUID");
 
 -- AddForeignKey
 ALTER TABLE "tbl_auth_permissions" ADD CONSTRAINT "tbl_auth_permissions_roleId_fkey" FOREIGN KEY ("roleId") REFERENCES "tbl_auth_roles"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
@@ -456,3 +523,9 @@ ALTER TABLE "tbl_grievances" ADD CONSTRAINT "tbl_grievances_reporterUserId_fkey"
 
 -- AddForeignKey
 ALTER TABLE "tbl_grievances" ADD CONSTRAINT "tbl_grievances_projectId_fkey" FOREIGN KEY ("projectId") REFERENCES "tbl_projects"("uuid") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "tbl_temp_beneficiary_group" ADD CONSTRAINT "tbl_temp_beneficiary_group_tempGroupUID_fkey" FOREIGN KEY ("tempGroupUID") REFERENCES "tbl_temp_group"("uuid") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "tbl_temp_beneficiary_group" ADD CONSTRAINT "tbl_temp_beneficiary_group_tempBenefUID_fkey" FOREIGN KEY ("tempBenefUID") REFERENCES "tbl_temp_beneficiaries"("uuid") ON DELETE RESTRICT ON UPDATE CASCADE;
