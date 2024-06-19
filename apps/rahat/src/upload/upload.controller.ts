@@ -1,4 +1,4 @@
-import { Controller, Injectable, Post, UploadedFile, UseInterceptors } from "@nestjs/common";
+import { Controller, Injectable, Post, Query, UploadedFile, UseInterceptors } from "@nestjs/common";
 import { FileInterceptor } from "@nestjs/platform-express";
 import { ApiBody, ApiConsumes, ApiTags } from "@nestjs/swagger";
 import { FileUploadDto } from "@rahataid/extensions";
@@ -19,7 +19,7 @@ export class UploadController {
   })
   @Post('file')
   @UseInterceptors(FileInterceptor('file'))
-  async uploadFile(@UploadedFile() file: any) {
+  async uploadFile(@UploadedFile() file: any, @Query('bucket') bucketName: string) {
     const buffer = file.buffer;
     const mimeType = file.mimetype;
     const fileName = file.originalname.replace(/\s/g, "-");
