@@ -4,7 +4,7 @@ import { EventEmitter2 } from '@nestjs/event-emitter';
 import { ClientProxy, RpcException } from '@nestjs/microservices';
 import { Beneficiary } from '@prisma/client';
 import {
-  AddBenfGroupToProjectDto, AddBenToProjectDto, AddToProjectDto,
+  AddBenfGroupToProjectDto, AddBenToProjectDto, addBulkBeneficiaryToProject, AddToProjectDto,
   CreateBeneficiaryDto,
   CreateBeneficiaryGroupsDto,
   ImportTempBenefDto,
@@ -17,7 +17,7 @@ import {
 import {
   BeneficiaryConstants,
   BeneficiaryEvents,
-  BeneficiaryJobs, BQUEUE, generateRandomWallet, ProjectContants
+  BeneficiaryJobs, BQUEUE, generateRandomWallet, ProjectContants, TPIIData
 } from '@rahataid/sdk';
 import { paginator, PaginatorTypes, PrismaService } from '@rumsan/prisma';
 import { Queue } from 'bull';
