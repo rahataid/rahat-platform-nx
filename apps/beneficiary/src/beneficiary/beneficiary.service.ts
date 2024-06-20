@@ -140,18 +140,15 @@ export class BeneficiaryService {
           uuid: d?.uuid
         },
         include: {
-          groupedBeneficiaries: {
-            where: {
-              deletedAt: null
-            },
-            include: {
-              Beneficiary: {
-                include: {
-                  pii: true
+          _count: {
+            select: {
+              groupedBeneficiaries: {
+                where: {
+                  deletedAt: null
                 }
-              },
+              }
             }
-          }
+          },
         }
       })
       groups.push(data)
@@ -250,7 +247,7 @@ export class BeneficiaryService {
   }
 
   async create(dto: CreateBeneficiaryDto, projectUuid?: string) {
-    const { piiData, ...data } = dto;
+    const { piiData, projectUUIDs, ...data } = dto;
     if (!data.walletAddress) {
       data.walletAddress = generateRandomWallet().address;
     }
@@ -284,6 +281,14 @@ export class BeneficiaryService {
           ...piiData,
         },
       });
+    }
+
+    // Assign beneficiary to project while creating. Useful when a beneficiary is created from inside a project
+    if (projectUUIDs.length && rdata.uuid) {
+      const assignPromises = projectUUIDs.map(projectUuid => {
+        return this.assignBeneficiaryToProject({ beneficiaryId: rdata.uuid, projectId: projectUuid });
+      });
+      await Promise.all(assignPromises);
     }
     this.eventEmitter.emit(BeneficiaryEvents.BENEFICIARY_CREATED, {
       projectUuid,
