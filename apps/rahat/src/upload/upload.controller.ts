@@ -19,12 +19,12 @@ export class UploadController {
   })
   @Post('file')
   @UseInterceptors(FileInterceptor('file'))
-  async uploadFile(@UploadedFile() file: any, @Query('bucket') bucketName: string) {
+  async uploadFile(@UploadedFile() file: any, @Query('folderName') folderName: string) {
     const buffer = file.buffer;
     const mimeType = file.mimetype;
     const fileName = file.originalname.replace(/\s/g, "-");
 
-    const folderName = "dev"
+    // const folderName = "dev"
     const rootFolderName = "aa"
 
     return await this.uploadService.uploadFile(buffer, mimeType, fileName, folderName, rootFolderName);
