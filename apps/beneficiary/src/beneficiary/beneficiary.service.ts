@@ -4,9 +4,7 @@ import { EventEmitter2 } from '@nestjs/event-emitter';
 import { ClientProxy, RpcException } from '@nestjs/microservices';
 import { Beneficiary } from '@prisma/client';
 import {
-  AddBenToProjectDto,
-  AddBenfGroupToProjectDto,
-  AddToProjectDto,
+  AddBenfGroupToProjectDto, AddBenToProjectDto, addBulkBeneficiaryToProject, AddToProjectDto,
   CreateBeneficiaryDto,
   CreateBeneficiaryGroupsDto,
   ImportTempBenefDto,
@@ -14,18 +12,14 @@ import {
   ListBeneficiaryGroupDto,
   ListTempBeneficiariesDto,
   ListTempGroupsDto,
-  UpdateBeneficiaryDto,
-  addBulkBeneficiaryToProject
+  UpdateBeneficiaryDto
 } from '@rahataid/extensions';
 import {
-  BQUEUE,
   BeneficiaryConstants,
   BeneficiaryEvents,
-  BeneficiaryJobs,
-  ProjectContants, TPIIData,
-  generateRandomWallet
+  BeneficiaryJobs, BQUEUE, generateRandomWallet, ProjectContants, TPIIData
 } from '@rahataid/sdk';
-import { PaginatorTypes, PrismaService, paginator } from '@rumsan/prisma';
+import { paginator, PaginatorTypes, PrismaService } from '@rumsan/prisma';
 import { Queue } from 'bull';
 import { UUID } from 'crypto';
 import { lastValueFrom } from 'rxjs';
@@ -196,7 +190,6 @@ export class BeneficiaryService {
         perPage: dto.perPage,
       }
     );
-
     if (result.data.length > 0) {
       const mergedData = await this.mergePIIData(result.data);
       result.data = mergedData;
@@ -211,7 +204,7 @@ export class BeneficiaryService {
         where: { uuid: d.uuid }
       })
       const piiData = await this.prisma.beneficiaryPii.findUnique({
-        where: { beneficiaryId: projectData.id },
+        where: { beneficiaryId: projectData?.id },
       });
       if (projectData) {
         d.projectData = projectData
@@ -268,7 +261,7 @@ export class BeneficiaryService {
         phone: piiData.phone,
       },
     });
-    if (benData) throw new RpcException('Phone number should be unique');
+    if (benData) throw new RpcException('Phone number already exist');
     if (data.birthDate) data.birthDate = new Date(data.birthDate);
     const rdata = await this.rsprisma.beneficiary.create({
       data,
@@ -651,7 +644,7 @@ export class BeneficiaryService {
 
     //check if phone number is unique or not
     const benPhone = await this.checkPhoneNumber(dtos);
-    if (benPhone.length > 0) throw new RpcException(`${benPhone} Phone number should be unique`);
+    if (benPhone.length > 0) throw new RpcException(`${benPhone} Phone number already exist`);
 
     const hasWallet = dtos.every((dto) => dto.walletAddress);
     if (hasWallet) {
