@@ -59,7 +59,17 @@ export class BeneficiaryService {
   async listPiiData(dto: any) {
     const repository = dto.projectId ? this.rsprisma.beneficiaryProject : this.rsprisma.beneficiaryPii;
     const include = dto.projectId ? { Beneficiary: true } : {};
-    const where = dto.projectId ? { projectId: dto.projectId } : {};
+    let where: any = dto.projectId ? { projectId: dto.projectId } : {};
+
+    const startDate = dto.startDate;
+    const endDate = dto.endDate;
+
+    if (dto.projectId) {
+      if (startDate && endDate) { where.createdAt = { gte: new Date(startDate), lte: new Date(endDate), } }
+      if (startDate && !endDate) { where.createdAt = { gte: new Date(startDate) } }
+      if (!startDate && endDate) { where.createdAt = { lte: new Date(endDate) } }
+    }
+
     //TODO: change in library to make pagination optional
     const perPage = await repository.count()
 
@@ -74,6 +84,8 @@ export class BeneficiaryService {
         perPage: perPage,
       }
     );
+
+    console.log(data)
 
     if (dto.projectId && data.data.length > 0) {
       const mergedData = await this.mergeProjectPIIData(data.data);
@@ -164,8 +176,10 @@ export class BeneficiaryService {
     const orderBy: Record<string, 'asc' | 'desc'> = {};
     orderBy[dto.sort] = dto.order;
     const projectUUID = dto.projectId;
+    const startDate = dto.startDate;
+    const endDate = dto.endDate;
 
-    const where = projectUUID ? {
+    let where: any = projectUUID ? {
       deletedAt: null,
       BeneficiaryProject: projectUUID === 'NOT_ASSGNED' ? {
         none: {}
@@ -173,10 +187,16 @@ export class BeneficiaryService {
         some: {
           projectId: projectUUID
         }
-      }
+      },
     } : {
       deletedAt: null
     }
+
+    if (startDate && endDate) { where.createdAt = { gte: new Date(startDate), lte: new Date(endDate), } }
+
+    if (startDate && !endDate) { where.createdAt = { gte: new Date(startDate) } }
+
+    if (!startDate && endDate) { where.createdAt = { lte: new Date(endDate) } }
 
     result = await paginate(
       this.rsprisma.beneficiary,
