@@ -1,7 +1,10 @@
 import { Injectable } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
+import { ListSettingDto, UpdateSettngsDto } from '@rahataid/extensions';
 import { CreateSettingDto } from '@rumsan/extensions/dtos';
 import { PrismaService } from '@rumsan/prisma';
 import { SettingDataType } from '@rumsan/sdk/enums';
+import { paginate } from '../utils/paginate';
 
 
 function getDataType(
@@ -102,5 +105,76 @@ export class AppService {
     });
 
     return newSetting;
+  }
+
+  async getRahatSettings(query: ListSettingDto) {
+    const AND_CONDITIONS = [];
+    let conditions = {};
+
+    if (query.name) {
+      AND_CONDITIONS.push({
+        name: { contains: query.name, mode: 'insensitive' },
+      });
+      conditions = { AND: AND_CONDITIONS };
+    }
+
+    const select: Prisma.SettingSelect = {
+      name: true,
+      dataType: true,
+      isPrivate: true,
+      isReadOnly: true,
+      requiredFields: true,
+      value: true,
+    };
+
+    return paginate(
+      this.prisma.setting,
+      {
+        where: { ...conditions },
+        select,
+      },
+      {
+        page: query.page,
+        perPage: query.perPage,
+      },
+    );
+  }
+
+  async updateRahatSettngs(name: string, dto: UpdateSettngsDto) {
+    const { value, requiredFields } = dto;
+    console.log(dto);
+    const settingsName = await this.prisma.setting.findUnique({
+      where: {
+        name,
+      },
+    });
+    if (!settingsName) throw new Error('Setting not found');
+
+    if (!value || typeof value !== 'object' || !Array.isArray(requiredFields)) {
+      throw new Error('Invalid data structure');
+    }
+
+    const matchKeysWithRequiredFields = Object.keys(value).every((key) =>
+      requiredFields.includes(key),
+    );
+
+    const matchRequiredFieldsWithKey = requiredFields.every((field) =>
+      Object.keys(value).includes(field),
+    );
+    console.log(matchRequiredFieldsWithKey);
+    if (!matchKeysWithRequiredFields || !matchRequiredFieldsWithKey)
+      throw new Error('Key did not match with the Required Fields');
+
+    return this.prisma.setting.update({
+      where: {
+        name,
+      },
+      data: {
+        value: dto.value,
+        requiredFields: dto.requiredFields,
+        isPrivate: dto.isPrivate,
+        isReadOnly: dto.isReadOnly,
+      },
+    });
   }
 }
