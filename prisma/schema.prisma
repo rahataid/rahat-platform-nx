@@ -52,6 +52,8 @@ model Role {
   id       Int       @unique @default(autoincrement())
   name     String    @unique @db.VarChar()
   isSystem Boolean   @default(false)
+  onChain  Boolean   @default(false)
+  project  String    @db.Uuid()
   expiry   DateTime?
 
   Permission Permission[]
