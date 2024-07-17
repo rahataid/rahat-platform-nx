@@ -31,6 +31,7 @@ export const SUBJECTS = {
   ALL: 'all',
   BENEFICIARY: 'beneficiary',
   PROJECT: 'project',
+  PUBLIC: 'public',
   VENDOR: 'vendor',
 };
 

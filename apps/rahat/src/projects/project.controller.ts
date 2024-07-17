@@ -10,22 +10,23 @@ import {
   Query
 } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
-import { ApiParam, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiParam, ApiTags } from '@nestjs/swagger';
 import {
   CreateProjectDto,
   ListProjectBeneficiaryDto,
   ProjectCommunicationDto,
   UpdateProjectDto,
-  UpdateProjectStatusDto
+  UpdateProjectStatusDto,
+  UpdateRolePermsDto
 } from '@rahataid/extensions';
-import { BeneficiaryJobs, MS_TIMEOUT, ProjectJobs } from '@rahataid/sdk';
+import { APP, BeneficiaryJobs, MS_TIMEOUT, ProjectJobs } from '@rahataid/sdk';
 import { CreateSettingDto } from '@rumsan/extensions/dtos';
 import { UUID } from 'crypto';
 import { timeout } from 'rxjs/operators';
+import { CurrentUser, CurrentUserInterface } from '../decorators';
 import { ProjectService } from './project.service';
 
-// @ApiBearerAuth(APP.JWT_BEARER)
-// @UseGuards(JwtGuard)
+@ApiBearerAuth(APP.JWT_BEARER)
 @Controller('projects')
 @ApiTags('Projects')
 export class ProjectController {
@@ -38,6 +39,12 @@ export class ProjectController {
   @Post()
   create(@Body() createProjectDto: CreateProjectDto) {
     return this.projectService.create(createProjectDto);
+  }
+
+  @Patch(':uuid/role-perms')
+  @ApiParam({ name: 'uuid', required: true })
+  updateRolePerms(@Param('uuid') uuid: UUID, @Body() dto: UpdateRolePermsDto) {
+    return this.projectService.upsertRolesAndPerms(uuid, dto)
   }
 
   @Get()
@@ -90,13 +97,16 @@ export class ProjectController {
       .pipe(timeout(5000));
   }
 
-  // @CheckAbilities({ actions: ACTIONS.CREATE, subject: SUBJECTS.USER })
+  // @UseGuards(JwtGuard)
+  // @CheckAbilities({ actions: ACTIONS.READ, subject: SUBJECTS.PUBLIC })
   @ApiParam({ name: 'uuid', required: true })
   @Post(':uuid/actions')
   projectActions(
     @Param('uuid') uuid: UUID,
     @Body() data: ProjectCommunicationDto,
+    @CurrentUser() cu: CurrentUserInterface
   ) {
+    data = { payload: { ...data.payload, cu }, action: data.action };
     const response = this.projectService.handleProjectActions({
       uuid,
       ...data,

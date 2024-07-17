@@ -1,7 +1,8 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { ClientProxy } from '@nestjs/microservices';
-import { CreateProjectDto, UpdateProjectDto, UpdateProjectStatusDto } from '@rahataid/extensions';
+import { PrismaClient } from '@prisma/client';
+import { CreateProjectDto, PermissionSet, UpdateProjectDto, UpdateProjectStatusDto, UpdateRolePermsDto } from '@rahataid/extensions';
 import {
   BeneficiaryJobs,
   MS_ACTIONS,
@@ -28,22 +29,50 @@ export class ProjectService {
     @Inject('RAHAT_CLIENT') private readonly client: ClientProxy
   ) { }
 
-  async create(data: CreateProjectDto) {
-    // TODO: refactor to proper validator
-    // switch (data.type) {
-    //   case 'AA':
-    //     SettingsService.get('AA')
-    //     break;
-    //   case 'CVA':
-    //     SettingsService.get('CVA')
-    //     break;
-    //   case 'EL':
-    //     SettingsService.get('EL')
-    //     break;
-    //   default:
-    //     throw new Error('Invalid project type.')
-    // }
 
+  async updateRole(txn: PrismaClient, role: string, scope: string) {
+    const projectRole = `${role}-${scope}`;
+    const existingRole = await txn.role.findUnique({ where: { name: projectRole } });
+    if (!existingRole) throw new Error("Role does not exist!");
+    const payload = { name: projectRole, scope };
+    return txn.role.update({
+      where: { name: projectRole },
+      data: payload,
+    })
+  }
+
+  async deleteExistingPerms(txn: PrismaClient, roleId: number) {
+    return txn.permission.deleteMany({ where: { roleId } })
+  }
+
+  async upsertRolesAndPerms(scope: string, dto: UpdateRolePermsDto) {
+    const { role, perms } = dto;
+    return this.prisma.$transaction(async (txn: PrismaClient) => {
+      const updatedRole = await this.updateRole(txn, role, scope);
+      await this.deleteExistingPerms(txn, updatedRole.id);
+      await this.createPermissions(txn, updatedRole.id, perms)
+      return updatedRole;
+    })
+  }
+
+  async createPermissions(txn: PrismaClient, roleId: number, perms: PermissionSet) {
+    const permissionsData = [];
+    for (const subject in perms) {
+      for (const action of perms[subject]) {
+        permissionsData.push({
+          roleId,
+          subject,
+          action,
+        });
+      }
+    }
+    return txn.permission.createMany({
+      data: permissionsData,
+    });
+  }
+
+
+  async create(data: CreateProjectDto) {
     const project = await this.prisma.project.create({
       data,
     });
