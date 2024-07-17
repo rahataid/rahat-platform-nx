@@ -49,6 +49,7 @@ export enum UploadFileType {
 
 export enum ProjectStatus {
   NOT_READY = 'NOT_READY',
+  READY = 'READY',
   ACTIVE = 'ACTIVE',
   CLOSED = 'CLOSED'
 }

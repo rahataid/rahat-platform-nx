@@ -50,6 +50,15 @@ export class ProjectService {
     return project;
   }
 
+  async checkStatus(uuid: UUID) {
+    const { status } = await this.prisma.project.findUnique({
+      where: {
+        uuid,
+      },
+    });
+    return { status };
+  }
+
   async list() {
     return this.prisma.project.findMany();
   }

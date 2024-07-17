@@ -9,7 +9,7 @@ import {
   Post,
   Query
 } from '@nestjs/common';
-import { ClientProxy } from '@nestjs/microservices';
+import { ClientProxy, MessagePattern } from '@nestjs/microservices';
 import { ApiParam, ApiTags } from '@nestjs/swagger';
 import {
   CreateProjectDto,
@@ -59,11 +59,29 @@ export class ProjectController {
   }
 
   @ApiParam({ name: 'uuid', required: true })
+  @Get(':uuid/status')
+  checkStatus(
+    @Param('uuid') uuid: UUID
+  ) {
+    return this.projectService.checkStatus(uuid);
+  }
   @Patch(':uuid/status')
-  updateStatus(
+  updateStatusHttp(
     @Body() data: UpdateProjectStatusDto,
     @Param('uuid') uuid: UUID
   ) {
+    return this.handleUpdateStatus(uuid, data);
+  }
+
+  @MessagePattern(ProjectJobs.PROJECT_STATUS_UPDATE)
+  updateStatusMessage(
+    payload: any
+  ) {
+    console.log({ payload })
+    return this.handleUpdateStatus(payload.uuid, payload.data);
+  }
+
+  private handleUpdateStatus(uuid: UUID, data: UpdateProjectStatusDto) {
     return this.projectService.updateStatus(uuid, data);
   }
 

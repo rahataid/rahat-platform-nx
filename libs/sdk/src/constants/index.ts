@@ -41,6 +41,7 @@ export const APP = {
 export const MS_ACTIONS = {
   PROJECT: {
     SETUP: 'project.setup',
+    STATUS: 'project.status',
   },
   BENEFICIARY: {
     CREATE: 'beneficiary.create',

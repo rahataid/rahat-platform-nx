@@ -10,6 +10,8 @@ export const EVENTS = {
 
 export const JOBS = {
   PROJECT_CREATE: 'project.create',
+  PROJECT_STATUS: 'project.status',
+  PROJECT_STATUS_UPDATE: 'project.status.update',
   PROJECT_UPDATE: 'project.update',
   PROJECT_DELETE: 'project.delete',
   PROJECT_SETUP: 'rahat.jobs.project.setup',

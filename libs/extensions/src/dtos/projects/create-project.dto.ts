@@ -57,9 +57,9 @@ export class UpdateProjectStatusDto {
   @ApiProperty({
     type: 'string',
     required: false,
-    example: 'Some extra information',
+    example: 'READY',
   })
   @IsString()
   @IsOptional()
-  status?: ProjectStatus;
+  status: ProjectStatus;
 }

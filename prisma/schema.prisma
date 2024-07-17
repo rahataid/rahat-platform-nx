@@ -307,6 +307,7 @@ model BeneficiaryProject {
 
 enum ProjectStatus {
   NOT_READY
+  READY
   ACTIVE
   CLOSED
 }
