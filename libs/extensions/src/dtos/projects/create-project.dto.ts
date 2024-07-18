@@ -3,6 +3,11 @@ import { ApiProperty } from '@nestjs/swagger';
 import { ProjectStatus } from '@rahataid/sdk/enums';
 import { IsObject, IsOptional, IsString } from 'class-validator';
 
+export interface IRole {
+  name: string,
+  onChain: boolean
+}
+
 export class CreateProjectDto {
   @ApiProperty({
     type: 'string',
@@ -44,6 +49,13 @@ export class CreateProjectDto {
   @IsOptional()
   @IsString()
   contractAddress?: string
+
+  @IsOptional()
+  @ApiProperty({
+    required: false,
+    example: [{ name: 'Admin', onChain: true }, { name: 'Manager', onChain: false }]
+  })
+  roles: IRole[]
 }
 
 export class UpdateProjectDto extends OmitType(PartialType(CreateProjectDto), [

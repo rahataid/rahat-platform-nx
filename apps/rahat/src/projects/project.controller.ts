@@ -37,14 +37,14 @@ export class ProjectController {
   ) { }
 
   @Post()
-  create(@Body() createProjectDto: CreateProjectDto) {
-    return this.projectService.create(createProjectDto);
+  create(@Body() dto: CreateProjectDto) {
+    return this.projectService.create(dto);
   }
 
   @Patch(':uuid/role-perms')
   @ApiParam({ name: 'uuid', required: true })
   updateRolePerms(@Param('uuid') uuid: UUID, @Body() dto: UpdateRolePermsDto) {
-    return this.projectService.upsertRolesAndPerms(uuid, dto)
+    return this.projectService.updateRolesAndPerms(uuid, dto)
   }
 
   @Get()

@@ -2,7 +2,7 @@ import { Inject, Injectable } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { ClientProxy } from '@nestjs/microservices';
 import { PrismaClient } from '@prisma/client';
-import { CreateProjectDto, PermissionSet, UpdateProjectDto, UpdateProjectStatusDto, UpdateRolePermsDto } from '@rahataid/extensions';
+import { CreateProjectDto, IRole, PermissionSet, UpdateProjectDto, UpdateProjectStatusDto, UpdateRolePermsDto } from '@rahataid/extensions';
 import {
   BeneficiaryJobs,
   MS_ACTIONS,
@@ -45,7 +45,7 @@ export class ProjectService {
     return txn.permission.deleteMany({ where: { roleId } })
   }
 
-  async upsertRolesAndPerms(scope: string, dto: UpdateRolePermsDto) {
+  async updateRolesAndPerms(scope: string, dto: UpdateRolePermsDto) {
     const { role, perms } = dto;
     return this.prisma.$transaction(async (txn: PrismaClient) => {
       const updatedRole = await this.updateRole(txn, role, scope);
@@ -71,15 +71,26 @@ export class ProjectService {
     });
   }
 
+  async createRoles(txn: PrismaClient, roles: any[]) {
+    return txn.role.createMany({ data: roles })
+  }
 
-  async create(data: CreateProjectDto) {
-    const project = await this.prisma.project.create({
-      data,
-    });
 
-    this.eventEmitter.emit(ProjectEvents.PROJECT_CREATED, project);
-
-    return project;
+  async create(dto: CreateProjectDto) {
+    const { roles, ...rest } = dto;
+    return this.prisma.$transaction(async (txn: PrismaClient) => {
+      const project = await txn.project.create({
+        data: rest,
+      });
+      if (roles && roles.length) {
+        const sanitized = roles.map((r: IRole) => {
+          return { ...r, name: `${dto.name} ${r.name}`, scope: project.uuid }
+        });
+        await this.createRoles(txn, sanitized)
+      }
+      this.eventEmitter.emit(ProjectEvents.PROJECT_CREATED, project);
+      return project;
+    })
   }
 
   async list() {
