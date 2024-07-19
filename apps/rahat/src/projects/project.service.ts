@@ -166,6 +166,7 @@ export class ProjectService {
   }
 
   async sendCommand(cmd, payload, timeoutValue = MS_TIMEOUT, client: ClientProxy, action: string) {
+    console.log("Payload=>", payload);
     const user = this.requestContextService.getUser();
     const requiresUser = userRequiredActions.has(action)
     return client.send(cmd, {
