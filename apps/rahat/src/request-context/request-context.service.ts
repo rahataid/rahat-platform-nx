@@ -12,6 +12,7 @@ export class RequestContextService {
     }
 
     getUser() {
+        console.log("Req=>", this.request)
         return this.request.user;
     }
 }

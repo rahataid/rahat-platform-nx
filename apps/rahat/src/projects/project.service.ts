@@ -166,9 +166,8 @@ export class ProjectService {
   }
 
   async sendCommand(cmd, payload, timeoutValue = MS_TIMEOUT, client: ClientProxy, action: string) {
-    const user = this.requestContextService.getUser()
+    const user = this.requestContextService.getUser();
     const requiresUser = userRequiredActions.has(action)
-
     return client.send(cmd, {
       ...payload,
       ...(requiresUser && { user })
@@ -208,7 +207,28 @@ export class ProjectService {
 
   }
 
+  async checkOnchainRole(currentRoles: string[]) {
+    let onChain = false;
+    const data = await this.prisma.role.findMany({
+      where: {
+        name: { in: currentRoles }
+      }
+    });
+    if (!data.length) return onChain;
+    for (let d of data) {
+      if (d.onChain) {
+        onChain = true;
+        break;
+      }
+    }
+
+    return onChain;
+  }
+
   async handleProjectActions({ uuid, action, payload }) {
+    let currentUser = payload.cu;
+    currentUser.onChain = await this.checkOnchainRole(currentUser.roles);
+    payload.cu = currentUser;
     console.log({ uuid, action, payload })
     //Note: This is a temporary solution to handle metaTx actions
     const metaTxActions = {
@@ -233,12 +253,13 @@ export class ProjectService {
       ...rpActions
     };
 
-
     const actionFunc = actions[action];
     if (!actionFunc) {
       throw new Error('Please provide a valid action!');
     }
-    return await actionFunc(uuid, payload, (...args) => this.sendCommand(args[0], args[1], args[2], this.client, action));
+    return await actionFunc(uuid, payload, (...args) => {
+      return this.sendCommand(args[0], args[1], args[2], this.client, action)
+    });
   }
 }
 
