@@ -2,13 +2,15 @@
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
 generator client {
-  provider      = "prisma-client-js"
-  binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
+  provider        = "prisma-client-js"
+  binaryTargets   = ["native", "linux-musl-openssl-3.0.x"]
+  previewFeatures = ["multiSchema"]
 }
 
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
+  schemas  = ["public", "audit"]
 }
 
 // ++++++++++++++++++ START: @rumsan/user - User +++++++++++++++++++++++++++++++
@@ -38,6 +40,7 @@ model User {
   grievances Grievance[] @relation("UserGrievances")
 
   @@map("tbl_users")
+  @@schema("public")
 }
 
 enum Gender {
@@ -45,6 +48,8 @@ enum Gender {
   FEMALE
   OTHER
   UNKNOWN
+
+  @@schema("public")
 }
 
 // =================== Role Module ==================
@@ -63,6 +68,7 @@ model Role {
   updatedBy Int?
 
   @@map("tbl_auth_roles")
+  @@schema("public")
 }
 
 model Permission {
@@ -80,6 +86,7 @@ model Permission {
   updatedAt DateTime? @updatedAt()
 
   @@map("tbl_auth_permissions")
+  @@schema("public")
 }
 
 model UserRole {
@@ -96,6 +103,7 @@ model UserRole {
 
   @@unique([userId, roleId], name: "userRoleIdentifier")
   @@map("tbl_users_roles")
+  @@schema("public")
 }
 
 // =================== Auth Module ==================
@@ -119,6 +127,7 @@ model Auth {
 
   @@unique([service, serviceId], name: "authIdentifier")
   @@map("tbl_auth")
+  @@schema("public")
 }
 
 model AuthSession {
@@ -135,6 +144,7 @@ model AuthSession {
   createdAt DateTime @default(now())
 
   @@map("tbl_auth_sessions")
+  @@schema("public")
 }
 
 enum Service {
@@ -147,6 +157,8 @@ enum Service {
   TWITTER
   GITHUB
   LINKEDIN
+
+  @@schema("public")
 }
 
 // ++++++++++++++++++ END: @rumsan/user - Role/Auth ++++++++++++++++++++++++
@@ -168,6 +180,7 @@ model Signup {
   updatedAt DateTime? @updatedAt()
 
   @@map("tbl_users_signups")
+  @@schema("public")
 }
 
 enum SignupStatus {
@@ -175,6 +188,8 @@ enum SignupStatus {
   APPROVED
   FAILED
   REJECTED
+
+  @@schema("public")
 }
 
 // ++++++++++++++++++ END: @rumsan/user - Signup +++++++++++++++++++++++++++
@@ -189,6 +204,7 @@ model Setting {
   isPrivate      Boolean         @default(true)
 
   @@map("tbl_settings")
+  @@schema("public")
 }
 
 enum SettingDataType {
@@ -196,11 +212,15 @@ enum SettingDataType {
   NUMBER
   BOOLEAN
   OBJECT
+
+  @@schema("public")
 }
 
 enum TokenDataType {
   IMPORTED
   CREATED
+
+  @@schema("public")
 }
 
 // ++++++++++++++++++ END: @rumsan/settings +++++++++++++++++++++++++++
@@ -231,6 +251,7 @@ model Beneficiary {
   groupedBeneficiaries GroupedBeneficiaries[]
 
   @@map("tbl_beneficiaries")
+  @@schema("public")
 }
 
 model GroupedBeneficiaries {
@@ -249,6 +270,7 @@ model GroupedBeneficiaries {
 
   @@unique([beneficiaryGroupId, beneficiaryId], name: "beneficiaryGroupIdentifier")
   @@map("tbl_grouped_beneficiaries")
+  @@schema("public")
 }
 
 model BeneficiaryGroup {
@@ -265,6 +287,7 @@ model BeneficiaryGroup {
   beneficiaryGroupProject BeneficiaryGroupProject[]
 
   @@map("tbl_beneficiaries_group")
+  @@schema("public")
 }
 
 model BeneficiaryGroupProject {
@@ -283,6 +306,7 @@ model BeneficiaryGroupProject {
 
   @@unique([projectId, beneficiaryGroupId], name: "beneficiaryGroupProjectIdentifier")
   @@map("tbl_beneficiaries_gorup_projects")
+  @@schema("public")
 }
 
 model BeneficiaryProject {
@@ -301,6 +325,7 @@ model BeneficiaryProject {
 
   @@unique([projectId, beneficiaryId], name: "beneficiaryProjectIdentifier")
   @@map("tbl_beneficiaries_projects")
+  @@schema("public")
 }
 
 // ++++++++++++++++++ END: @rahat/beneficiaries +++++++++++++++++++++++++++
@@ -309,11 +334,15 @@ enum ProjectStatus {
   NOT_READY
   ACTIVE
   CLOSED
+
+  @@schema("public")
 }
 
 enum BeneficiaryTypes {
   ENROLLED
   REFERRED
+
+  @@schema("public")
 }
 
 model BeneficiaryPii {
@@ -325,6 +354,7 @@ model BeneficiaryPii {
   beneficiary   Beneficiary @relation("BeneficiaryToPii", fields: [beneficiaryId], references: [id])
 
   @@map("tbl_beneficiaries_pii")
+  @@schema("public")
 }
 
 enum BankedStatus {
@@ -332,6 +362,8 @@ enum BankedStatus {
   UNBANKED
   BANKED
   UNDER_BANKED
+
+  @@schema("public")
 }
 
 enum InternetStatus {
@@ -339,6 +371,8 @@ enum InternetStatus {
   NO_INTERNET
   HOME_INTERNET
   MOBILE_INTERNET
+
+  @@schema("public")
 }
 
 enum PhoneStatus {
@@ -346,6 +380,8 @@ enum PhoneStatus {
   NO_PHONE
   FEATURE_PHONE
   SMART_PHONE
+
+  @@schema("public")
 }
 
 // ++++++++++++++++++ END: Rahat - Projects +++++++++++++++++++++++
@@ -371,6 +407,7 @@ model Project {
   Grievance Grievance[]
 
   @@map("tbl_projects")
+  @@schema("public")
 }
 
 // ++++++++++++++++++ END: Rahat - Projects +++++++++++++++++++++++++++++++
@@ -385,6 +422,7 @@ model Stats {
   updatedAt DateTime? @updatedAt()
 
   @@map("tbl_stats")
+  @@schema("public")
 }
 
 // ++++++++++++++++++ END: @rahat/stats - Statistics +++++++++++++++++++++++
@@ -404,6 +442,7 @@ model Vendors {
   deletedAt DateTime?
 
   @@map("tbl_vendors")
+  @@schema("public")
 }
 
 model ProjectVendors {
@@ -420,6 +459,7 @@ model ProjectVendors {
 
   @@unique([projectId, vendorId], name: "projectVendorIdentifier")
   @@map("tbl_projects_vendors")
+  @@schema("public")
 }
 
 // ++++++++++++++++++ END: @rahat/transactions - Vendors ++++++++++++++++++++++
@@ -440,6 +480,7 @@ model Transactions {
   deletedAt     DateTime?
 
   @@map("tbl_transactions")
+  @@schema("public")
 }
 
 enum TransactionStatus {
@@ -447,6 +488,8 @@ enum TransactionStatus {
   APPROVED
   REJECTED
   FAILED
+
+  @@schema("public")
 }
 
 // ++++++++++++++++++ END: @rahat/transactions - Transactions ++++++++++++++++++++++
@@ -459,12 +502,16 @@ enum GrievanceStatus {
   UNDER_REVIEW
   RESOLVED
   CLOSED
+
+  @@schema("public")
 }
 
 enum GrievanceType {
   TECHNICAL
   NON_TECHNICAL
   OTHER
+
+  @@schema("public")
 }
 
 model Grievance {
@@ -485,6 +532,7 @@ model Grievance {
   deletedAt       DateTime?
 
   @@map("tbl_grievances")
+  @@schema("public")
 }
 
 //  ++++++++++++++++++ END: @rahat/grievances - Grievances ++++++++++++++++++++++
@@ -516,6 +564,7 @@ model TempBeneficiary {
   TempGroupedBeneficiaries TempBeneficiaryGroup[]
 
   @@map("tbl_temp_beneficiaries")
+  @@schema("public")
 }
 
 model TempGroup {
@@ -526,6 +575,7 @@ model TempGroup {
   TempGroupedBeneficiaries TempBeneficiaryGroup[]
 
   @@map("tbl_temp_group")
+  @@schema("public")
 }
 
 model TempBeneficiaryGroup {
@@ -541,6 +591,7 @@ model TempBeneficiaryGroup {
 
   @@unique([tempGroupUID, tempBenefUID], name: "tempBeneficiaryGroupIdentifier")
   @@map("tbl_temp_beneficiary_group")
+  @@schema("public")
 }
 
 // ===========End Temporary benef storage=============
@@ -565,6 +616,27 @@ model Token {
   updatedBy Int?
 
   @@map("tbl_tokens")
+  @@schema("public")
 }
 
 // ===========End Tokens=============
+
+// ++++++++++++++++++ START: @rahat/Audit - Audit Operations ++++++++++++++++++++
+
+enum AuditOperation {
+  INSERT
+  UPDATE
+  DELETE
+
+  @@schema("audit")
+}
+
+model UserVersion {
+  // Version metadata fields
+  versionId        Int            @id @default(autoincrement())
+  versionOperation AuditOperation
+
+  @@schema("audit")
+}
+
+// ++++++++++++++++++ END: @rahat/Audit - Audit Operations ++++++++++++++++++++
