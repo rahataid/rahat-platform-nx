@@ -20,9 +20,9 @@ import {
   UpdateProjectStatusDto,
   UpdateRolePermsDto
 } from '@rahataid/extensions';
-import { APP, BeneficiaryJobs, MS_TIMEOUT, ProjectJobs } from '@rahataid/sdk';
+import { ACTIONS, APP, BeneficiaryJobs, MS_TIMEOUT, ProjectJobs, SUBJECTS } from '@rahataid/sdk';
 import { CreateSettingDto } from '@rumsan/extensions/dtos';
-import { JwtGuard } from '@rumsan/user';
+import { CheckAbilities, JwtGuard } from '@rumsan/user';
 import { UUID } from 'crypto';
 import { timeout } from 'rxjs/operators';
 import { CurrentUser, CurrentUserInterface } from '../decorators';
@@ -101,7 +101,7 @@ export class ProjectController {
   }
 
 
-  // @CheckAbilities({ actions: ACTIONS.READ, subject: SUBJECTS.PUBLIC })
+  @CheckAbilities({ actions: ACTIONS.READ, subject: SUBJECTS.PUBLIC })
   @ApiParam({ name: 'uuid', required: true })
   @Post(':uuid/actions')
   projectActions(

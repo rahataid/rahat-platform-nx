@@ -31,12 +31,11 @@ export class ProjectService {
 
 
   async updateRole(txn: PrismaClient, role: string, scope: string) {
-    const projectRole = `${role}-${scope}`;
-    const existingRole = await txn.role.findUnique({ where: { name: projectRole } });
+    const existingRole = await txn.role.findUnique({ where: { name: role } });
     if (!existingRole) throw new Error("Role does not exist!");
-    const payload = { name: projectRole, scope };
+    const payload = { name: role, scope };
     return txn.role.update({
-      where: { name: projectRole },
+      where: { name: role },
       data: payload,
     })
   }
@@ -166,12 +165,11 @@ export class ProjectService {
   }
 
   async sendCommand(cmd, payload, timeoutValue = MS_TIMEOUT, client: ClientProxy, action: string) {
-    console.log("Payload=>", payload);
-    const user = this.requestContextService.getUser();
+    // const user = this.requestContextService.getUser();
     const requiresUser = userRequiredActions.has(action)
     return client.send(cmd, {
       ...payload,
-      ...(requiresUser && { user })
+      // ...(requiresUser && { user })
     }).pipe(
       timeout(timeoutValue),
       tap((response) => {
@@ -254,12 +252,14 @@ export class ProjectService {
       ...rpActions
     };
 
+
+
     const actionFunc = actions[action];
     if (!actionFunc) {
       throw new Error('Please provide a valid action!');
     }
     return await actionFunc(uuid, payload, (...args) => {
-      return this.sendCommand(args[0], args[1], args[2], this.client, action)
+      return this.sendCommand(args[0], payload, args[2], this.client, action)
     });
   }
 }
