@@ -21,5 +21,5 @@ export class UpdateRolePermsDto {
         }),
     })
     @IsObject()
-    perms: PermissionSet;
+    permissions: PermissionSet;
 }

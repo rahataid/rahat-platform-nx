@@ -10,6 +10,7 @@ import {
   ProjectEvents,
   ProjectJobs
 } from '@rahataid/sdk';
+import { ROLE_PERMS_REGISTRY } from '@rahataid/sdk/constants/role-perms';
 import { BeneficiaryType } from '@rahataid/sdk/enums';
 import { PrismaService } from '@rumsan/prisma';
 import { UUID } from 'crypto';
@@ -30,14 +31,14 @@ export class ProjectService {
   ) { }
 
 
-  async updateRole(txn: PrismaClient, role: string, scope: string) {
-    const existingRole = await txn.role.findUnique({ where: { name: role } });
-    if (!existingRole) throw new Error("Role does not exist!");
-    const payload = { name: role, scope };
-    return txn.role.update({
-      where: { name: role },
-      data: payload,
-    })
+  async getRole(txn: PrismaClient, role: string, scope: string) {
+    const d = await txn.role.findUnique({
+      where: {
+        'roleIdentifier': { name: role, scope }
+      }
+    });
+    if (!d) throw new Error('Role not found');
+    return d;
   }
 
   async deleteExistingPerms(txn: PrismaClient, roleId: number) {
@@ -45,19 +46,19 @@ export class ProjectService {
   }
 
   async updateRolesAndPerms(scope: string, dto: UpdateRolePermsDto) {
-    const { role, perms } = dto;
+    const { role, permissions } = dto;
     return this.prisma.$transaction(async (txn: PrismaClient) => {
-      const updatedRole = await this.updateRole(txn, role, scope);
-      await this.deleteExistingPerms(txn, updatedRole.id);
-      await this.createPermissions(txn, updatedRole.id, perms)
-      return updatedRole;
+      const existingRole = await this.getRole(txn, role, scope);
+      await this.deleteExistingPerms(txn, existingRole.id);
+      await this.createPermissions(txn, existingRole.id, permissions)
+      return existingRole;
     })
   }
 
-  async createPermissions(txn: PrismaClient, roleId: number, perms: PermissionSet) {
+  async createPermissions(txn: PrismaClient, roleId: number, permissions: PermissionSet) {
     const permissionsData = [];
-    for (const subject in perms) {
-      for (const action of perms[subject]) {
+    for (const subject in permissions) {
+      for (const action of permissions[subject]) {
         permissionsData.push({
           roleId,
           subject,
@@ -70,22 +71,37 @@ export class ProjectService {
     });
   }
 
-  async createRoles(txn: PrismaClient, roles: any[]) {
-    return txn.role.createMany({ data: roles })
+  async createRolesAndPerms(txn: PrismaClient, roles: IRole[]) {
+    const payloads = [];
+    for (let r of roles) {
+      const { permissions, ...rest } = r;
+      const created = await txn.role.create({ data: rest });
+
+      for (const [subject, actions] of Object.entries(permissions)) {
+        for (const action of actions) {
+          payloads.push({ subject, action, roleId: created.id });
+        }
+      }
+    }
+
+    return txn.permission.createMany({ data: payloads });
   }
 
 
   async create(dto: CreateProjectDto) {
-    const { roles, ...rest } = dto;
+    const registryData = ROLE_PERMS_REGISTRY[dto.type];
+    if (!registryData) throw new Error('Roles & permissions not found for this type');
+    const { roles } = registryData;
+
     return this.prisma.$transaction(async (txn: PrismaClient) => {
       const project = await txn.project.create({
-        data: rest,
+        data: dto,
       });
-      if (roles && roles.length) {
-        const sanitized = roles.map((r: IRole) => {
-          return { ...r, name: `${dto.name} ${r.name}`, scope: project.uuid }
+      if (roles.length) {
+        const rolesPayload = roles.map((r: IRole) => {
+          return { ...r, scope: project.uuid }
         });
-        await this.createRoles(txn, sanitized)
+        await this.createRolesAndPerms(txn, rolesPayload)
       }
       this.eventEmitter.emit(ProjectEvents.PROJECT_CREATED, project);
       return project;
