@@ -16,6 +16,7 @@ import {
   CreateProjectDto,
   ListProjectBeneficiaryDto,
   ProjectCommunicationDto,
+  RolePermsRegistryQueryDto,
   UpdateProjectDto,
   UpdateProjectStatusDto,
   UpdateRolePermsDto
@@ -53,6 +54,11 @@ export class ProjectController {
   @Get()
   list() {
     return this.projectService.list();
+  }
+
+  @Get('/registry')
+  getRegistry(@Query() query: RolePermsRegistryQueryDto) {
+    return this.projectService.getRegistryInfo(query);
   }
 
   @Get(':uuid')
@@ -124,4 +130,6 @@ export class ProjectController {
       .send({ cmd: BeneficiaryJobs.PROJECT_STATS }, uuid)
       .pipe(timeout(MS_TIMEOUT));
   }
+
+
 }

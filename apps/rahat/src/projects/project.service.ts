@@ -2,7 +2,7 @@ import { Inject, Injectable } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { ClientProxy } from '@nestjs/microservices';
 import { PrismaClient } from '@prisma/client';
-import { CreateProjectDto, IRole, PermissionSet, UpdateProjectDto, UpdateProjectStatusDto, UpdateRolePermsDto } from '@rahataid/extensions';
+import { CreateProjectDto, IRole, PermissionSet, RolePermsRegistryQueryDto, UpdateProjectDto, UpdateProjectStatusDto, UpdateRolePermsDto } from '@rahataid/extensions';
 import {
   BeneficiaryJobs,
   MS_ACTIONS,
@@ -30,6 +30,16 @@ export class ProjectService {
     @Inject('RAHAT_CLIENT') private readonly client: ClientProxy
   ) { }
 
+  getRegistryInfo(query: RolePermsRegistryQueryDto) {
+    const { project, name } = query;
+    const registryData = ROLE_PERMS_REGISTRY[project];
+    if (!registryData) throw new Error('Project not found. Allowed projects are [el,cva,aa]');
+    if (name) {
+      const data = registryData[name];
+      if (!data) throw new Error('Data not found. Allowed names are [roles,subjects]');
+      return data;
+    }
+  }
 
   async getRole(txn: PrismaClient, role: string, scope: string) {
     const d = await txn.role.findUnique({

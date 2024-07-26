@@ -10,3 +10,14 @@ export class ProjectCommunicationDto {
   @IsObject()
   payload: any;
 }
+
+export class RolePermsRegistryQueryDto {
+  @ApiProperty({ example: 'el', type: 'string' })
+  @IsString()
+  project: string;
+
+  @ApiProperty({ example: 'subjects' })
+  @IsString()
+  name?: string;
+}
+
