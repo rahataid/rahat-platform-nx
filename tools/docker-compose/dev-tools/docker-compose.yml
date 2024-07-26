@@ -64,10 +64,7 @@ services:
       - rahat_redis_data:/data
     networks:
       - rahat_platform
-      - rahat_projects
 
 networks:
   rahat_platform:
-    external: true
-  rahat_projects:
     external: true
