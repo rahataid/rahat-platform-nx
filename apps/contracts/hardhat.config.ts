@@ -6,7 +6,7 @@ import 'solidity-docgen';
 dotenv.config();
 
 
-const coinMarketCapApiKey: string = process.env.COINMARKETCAP_API_KEY || '';
+// const coinMarketCapApiKey: string = process.env.COINMARKETCAP_API_KEY || '';
 const privateKey: string = process.env.PRIVATE_KEY || '';
 const infuraApiKey: string = process.env.INFURA_API_KEY || '';
 
