@@ -234,14 +234,14 @@ export class ProjectService {
 
   async checkOnchainRole(currentRoles: string[]) {
     let onChain = false;
-    const data = await this.prisma.role.findMany({
+    const rows = await this.prisma.role.findMany({
       where: {
         name: { in: currentRoles }
       }
     });
-    if (!data.length) return onChain;
-    for (let d of data) {
-      if (d.onChain) {
+    if (!rows.length) return onChain;
+    for (let r of rows) {
+      if (r.onChain) {
         onChain = true;
         break;
       }
@@ -252,6 +252,7 @@ export class ProjectService {
 
   async handleProjectActions({ uuid, action, payload }) {
     let currentUser = payload.cu;
+    console.log("CU=>", currentUser)
     currentUser.onChain = await this.checkOnchainRole(currentUser.roles);
     payload.cu = currentUser;
     console.log({ uuid, action, payload })
@@ -284,6 +285,7 @@ export class ProjectService {
     if (!actionFunc) {
       throw new Error('Please provide a valid action!');
     }
+    // TODO: Check payload
     return await actionFunc(uuid, payload, (...args) => {
       return this.sendCommand(args[0], payload, args[2], this.client, action)
     });

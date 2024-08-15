@@ -1397,15 +1397,10 @@ export class BeneficiaryService {
 
   async saveTempBenefAndGroup(txn: any, groupUID: string, beneficiaries: any[], tempBenefPhone: any[]) {
     for (let b of beneficiaries) {
-      let createdData = null;
-      const found = tempBenefPhone.find(f => f.phone === b.phone);
-      // 2. Add benef to temp table
-      if (!found)
-        createdData = await txn.tempBeneficiary.create({
-          data: b
-        });
-      let benefUID = createdData?.uuid;
-      if (found) benefUID = found.uuid;
+      const row = await txn.tempBeneficiary.create({
+        data: b
+      });
+      const benefUID = row.uuid;
       // 3. Upsert temp benef group
       await txn.tempBeneficiaryGroup.upsert({
         where: {
@@ -1431,5 +1426,24 @@ export class BeneficiaryService {
   async importTempBeneficiaries(dto: ImportTempBenefDto) {
     this.beneficiaryQueue.add(BeneficiaryJobs.IMPORT_TEMP_BENEFICIARIES, dto)
     return { message: "Beneficiaries added to the queue!" }
+  }
+
+  async projectStatsDataSource(uuid?: UUID) {
+    return this.prisma.stats.findMany(
+      {
+        where: {
+          group: `source_${uuid}`
+        }
+      })
+  }
+
+  async allDataSource() {
+    console.log("reached till here")
+    return this.prisma.stats.findMany(
+      {
+        where: {
+          group: `source`
+        }
+      })
   }
 }

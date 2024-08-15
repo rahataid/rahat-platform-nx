@@ -1,10 +1,11 @@
 import { BullModule } from '@nestjs/bull';
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { APP_GUARD } from '@nestjs/core';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { StatsModule } from '@rahat/stats';
+import { SettingsModule } from '@rumsan/extensions/settings';
 import { PrismaService } from '@rumsan/prisma';
-import { SettingsModule } from '@rumsan/settings';
 import {
   AuthsModule,
   RSUserModule,
@@ -12,6 +13,7 @@ import {
   UsersModule,
 } from '@rumsan/user';
 import { BeneficiaryModule } from '../beneficiary/beneficiary.module';
+import { ExternalAppGuard } from '../decorators';
 import { GrievanceModule } from '../grievance/grievance.module';
 import { ListenersModule } from '../listeners/listeners.module';
 import { ProcessorsModule } from '../processors/processors.module';
@@ -42,16 +44,19 @@ import { AppService } from './app.service';
     ListenersModule,
     AppUsersModule,
     RSUserModule.forRoot([AuthsModule, UsersModule, RolesModule]),
-    SettingsModule,
     ProjectModule,
     StatsModule,
     ProcessorsModule,
     UploadModule,
     GrievanceModule,
     TokenModule,
+    SettingsModule,
     RequestContextModule
   ],
   controllers: [AppController],
-  providers: [AppService, PrismaService],
+  providers: [AppService, PrismaService, {
+    provide: APP_GUARD,
+    useClass: ExternalAppGuard,
+  }],
 })
 export class AppModule { }
