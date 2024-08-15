@@ -15,7 +15,6 @@ import { BeneficiaryType } from '@rahataid/sdk/enums';
 import { PrismaService } from '@rumsan/prisma';
 import { UUID } from 'crypto';
 import { tap, timeout } from 'rxjs';
-import { RequestContextService } from '../request-context/request-context.service';
 import { ERC2771FORWARDER } from '../utils/contracts';
 import { createContractSigner } from '../utils/web3';
 import { aaActions, beneficiaryActions, c2cActions, cvaActions, elActions, projectActions, settingActions, vendorActions } from './actions';
@@ -26,7 +25,7 @@ export class ProjectService {
   constructor(
     private prisma: PrismaService,
     private eventEmitter: EventEmitter2,
-    private requestContextService: RequestContextService,
+    // private requestContextService: RequestContextService,
     @Inject('RAHAT_CLIENT') private readonly client: ClientProxy
   ) { }
 
@@ -191,11 +190,11 @@ export class ProjectService {
   }
 
   async sendCommand(cmd, payload, timeoutValue = MS_TIMEOUT, client: ClientProxy, action: string) {
-    // const user = this.requestContextService.getUser();
+    console.log("P", payload)
     const requiresUser = userRequiredActions.has(action)
     return client.send(cmd, {
       ...payload,
-      // ...(requiresUser && { user })
+      ...(requiresUser && { user: payload.cu })
     }).pipe(
       timeout(timeoutValue),
       tap((response) => {
@@ -252,7 +251,6 @@ export class ProjectService {
 
   async handleProjectActions({ uuid, action, payload }) {
     let currentUser = payload.cu;
-    console.log("CU=>", currentUser)
     currentUser.onChain = await this.checkOnchainRole(currentUser.roles);
     payload.cu = currentUser;
     console.log({ uuid, action, payload })
@@ -264,7 +262,6 @@ export class ProjectService {
       [MS_ACTIONS.ELPROJECT.ASSIGN_DISCOUNT_VOUCHER]: async () => await this.executeMetaTxRequest(payload),
       [MS_ACTIONS.ELPROJECT.REQUEST_REDEMPTION]: async () => await this.executeMetaTxRequest(payload),
     };
-
 
     const actions = {
       ...projectActions,
@@ -280,15 +277,11 @@ export class ProjectService {
     };
 
 
-
     const actionFunc = actions[action];
     if (!actionFunc) {
       throw new Error('Please provide a valid action!');
     }
-    // TODO: Check payload
-    return await actionFunc(uuid, payload, (...args) => {
-      return this.sendCommand(args[0], payload, args[2], this.client, action)
-    });
+    return await actionFunc(uuid, payload, (...args) => this.sendCommand(args[0], args[1], args[2], this.client, action));
   }
 }
 
