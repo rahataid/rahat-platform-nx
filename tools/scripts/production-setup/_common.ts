@@ -27,6 +27,18 @@ export class commonLib {
         const contract = await import(`../contracts/${contractName}.json`);
         return contract;
     }
+
+    public async getDeployedAddress(
+        contractAddressFile: string,
+        contractName: string
+    ) {
+        const fileData = readFileSync(
+            `${__dirname}/deployments/${contractAddressFile}.json`,
+            'utf8'
+        );
+        const data = JSON.parse(fileData);
+        return data[contractName].address;
+    }
     public async deployContract(contractName: string, args: any[]) {
         const signer = this.getDeployerWallet();
         const { abi, bytecode } = await this.getContractArtifacts(contractName);

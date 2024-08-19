@@ -27,6 +27,7 @@
     "seed:contracts": "ts-node ./tools/scripts/local-setup/web3_setup/projectSeed.ts",
     "seed:network": "ts-node ./tools/scripts/local-setup/web3_setup/networkSeed.ts",
     "seed:settings": "ts-node ./tools/scripts/local-setup/web3_setup/settingsSeed.ts",
+    "update:restrictions":"ts-node ./tools/scripts/local-setup/web3_setup/setAccessControl.ts",
     "geteth": "ts-node tools/scripts/misc/geteth.ts",
     "contracts:compile": "cd ./apps/contracts && hardhat compile",
     "graph:codegen": "cd ./apps/graph && graph codegen",

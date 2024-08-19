@@ -3,7 +3,7 @@ import * as dotenv from 'dotenv';
 import { ethers, uuidV4 } from 'ethers';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'fs';
 import { ContractArtifacts, ContractDetails } from '../../types/contract';
-dotenv.config({ path: `${__dirname}/.env.setup` });
+dotenv.config();
 
 export class commonLib {
     provider: ethers.JsonRpcProvider;

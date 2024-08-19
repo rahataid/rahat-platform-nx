@@ -87,6 +87,7 @@ rm_modules() {
 contract_setup(){
     pnpm seed:contracts
     pnpm seed:network $current_dir
+    pnpm update:restrictions
 }
 
 graph_setup() {
