@@ -37,7 +37,7 @@ export class commonLib {
             'utf8'
         );
         const data = JSON.parse(fileData);
-        return data[contractName].address;
+        return data.contracts[contractName].address;
     }
     public async deployContract(contractName: string, args: any[]) {
         const signer = this.getDeployerWallet();
