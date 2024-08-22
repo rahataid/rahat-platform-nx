@@ -16,14 +16,17 @@ import {
   CreateProjectDto,
   ListProjectBeneficiaryDto,
   ProjectCommunicationDto,
+  RolePermsRegistryQueryDto,
   UpdateProjectDto,
-  UpdateProjectStatusDto
+  UpdateProjectStatusDto,
+  UpdateRolePermsDto
 } from '@rahataid/extensions';
-import { ACTIONS, APP, BeneficiaryJobs, MS_TIMEOUT, ProjectJobs } from '@rahataid/sdk';
+import { ACTIONS, APP, BeneficiaryJobs, MS_TIMEOUT, ProjectJobs, SUBJECTS } from '@rahataid/sdk';
 import { CreateSettingDto } from '@rumsan/extensions/dtos';
-import { AbilitiesGuard, CheckAbilities, JwtGuard, SUBJECTS } from "@rumsan/user";
+import { AbilitiesGuard, CheckAbilities, JwtGuard } from "@rumsan/user";
 import { UUID } from 'crypto';
 import { timeout } from 'rxjs/operators';
+import { CurrentUser, CurrentUserInterface } from '../decorators';
 import { ProjectService } from './project.service';
 
 @ApiBearerAuth(APP.JWT_BEARER)
@@ -39,16 +42,28 @@ export class ProjectController {
 
   @CheckAbilities({ actions: ACTIONS.MANAGE, subject: SUBJECTS.ALL })
   @Post()
-  create(@Body() createProjectDto: CreateProjectDto) {
-    return this.projectService.create(createProjectDto);
+  create(@Body() dto: CreateProjectDto) {
+    return this.projectService.create(dto);
   }
-  @CheckAbilities({ actions: ACTIONS.MANAGE, subject: SUBJECTS.USER })
+
+  @Patch(':uuid/role-perms')
+  @ApiParam({ name: 'uuid', required: true })
+  updateRolePerms(@Param('uuid') uuid: UUID, @Body() dto: UpdateRolePermsDto) {
+    return this.projectService.updateRolesAndPerms(uuid, dto)
+  }
+  @CheckAbilities({ actions: ACTIONS.MANAGE, subject: SUBJECTS.PROJECT })
   @Get()
   list() {
     return this.projectService.list();
   }
 
-  @CheckAbilities({ actions: ACTIONS.MANAGE, subject: SUBJECTS.USER })
+  @CheckAbilities({ actions: ACTIONS.READ, subject: SUBJECTS.PROJECT })
+  @Get('/registry')
+  getRegistry(@Query() query: RolePermsRegistryQueryDto) {
+    return this.projectService.getRegistryInfo(query);
+  }
+
+  @CheckAbilities({ actions: ACTIONS.MANAGE, subject: SUBJECTS.PROJECT })
   @Get(':uuid')
   @ApiParam({ name: 'uuid', required: true })
   findOne(@Param('uuid') uuid: UUID) {
@@ -82,7 +97,7 @@ export class ProjectController {
     return this.projectService.remove(uuid);
   }
 
-  @CheckAbilities({ actions: ACTIONS.READ, subject: SUBJECTS.USER })
+  @CheckAbilities({ actions: ACTIONS.READ, subject: SUBJECTS.BENEFICIARY })
   @ApiParam({ name: 'uuid', required: true })
   @Get(':uuid/beneficiaries')
   listBeneficiaries(@Query() dto: ListProjectBeneficiaryDto) {
@@ -101,13 +116,16 @@ export class ProjectController {
       .pipe(timeout(5000));
   }
 
-  @CheckAbilities({ actions: ACTIONS.CREATE, subject: SUBJECTS.USER })
+
+  @CheckAbilities({ actions: ACTIONS.READ, subject: SUBJECTS.PUBLIC })
   @ApiParam({ name: 'uuid', required: true })
   @Post(':uuid/actions')
   projectActions(
     @Param('uuid') uuid: UUID,
     @Body() data: ProjectCommunicationDto,
+    @CurrentUser() cu: CurrentUserInterface
   ) {
+    data = { payload: { ...data.payload, cu }, action: data.action };
     const response = this.projectService.handleProjectActions({
       uuid,
       ...data,
@@ -116,7 +134,7 @@ export class ProjectController {
   }
 
   //list project specific stats
-  @CheckAbilities({ actions: ACTIONS.READ, subject: SUBJECTS.USER })
+  @CheckAbilities({ actions: ACTIONS.READ, subject: SUBJECTS.PROJECT })
   @ApiParam({ name: 'uuid', required: true })
   @Get(':uuid/stats')
   projectStats(@Param('uuid') uuid: UUID) {
@@ -124,6 +142,8 @@ export class ProjectController {
       .send({ cmd: BeneficiaryJobs.PROJECT_STATS }, uuid)
       .pipe(timeout(MS_TIMEOUT));
   }
+
+
 
   //Get datasource for entire project
   // @Get('statsSources')
@@ -142,7 +162,7 @@ export class ProjectController {
   // }
 
   //list project specific stats sources
-  @CheckAbilities({ actions: ACTIONS.READ, subject: SUBJECTS.USER })
+  @CheckAbilities({ actions: ACTIONS.READ, subject: SUBJECTS.PROJECT })
   @ApiParam({ name: 'uuid', required: false })
   @Get(':uuid/statsSources')
   projectStatsSources(@Param('uuid') uuid: UUID) {
@@ -151,5 +171,4 @@ export class ProjectController {
       .pipe(timeout(MS_TIMEOUT));
   }
 
-
-} 
+}

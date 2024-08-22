@@ -1,7 +1,8 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { ClientProxy } from '@nestjs/microservices';
-import { CreateProjectDto, UpdateProjectDto, UpdateProjectStatusDto } from '@rahataid/extensions';
+import { PrismaClient } from '@prisma/client';
+import { CreateProjectDto, IRole, PermissionSet, RolePermsRegistryQueryDto, UpdateProjectDto, UpdateProjectStatusDto, UpdateRolePermsDto } from '@rahataid/extensions';
 import {
   BeneficiaryJobs,
   MS_ACTIONS,
@@ -9,11 +10,11 @@ import {
   ProjectEvents,
   ProjectJobs
 } from '@rahataid/sdk';
+import { ROLE_PERMS_REGISTRY } from '@rahataid/sdk/constants/role-perms';
 import { BeneficiaryType } from '@rahataid/sdk/enums';
 import { PrismaService } from '@rumsan/prisma';
 import { UUID } from 'crypto';
 import { tap, timeout } from 'rxjs';
-import { RequestContextService } from '../request-context/request-context.service';
 import { ERC2771FORWARDER } from '../utils/contracts';
 import { createContractSigner } from '../utils/web3';
 import { aaActions, beneficiaryActions, c2cActions, cvaActions, elActions, projectActions, settingActions, vendorActions } from './actions';
@@ -24,33 +25,96 @@ export class ProjectService {
   constructor(
     private prisma: PrismaService,
     private eventEmitter: EventEmitter2,
-    private requestContextService: RequestContextService,
+    // private requestContextService: RequestContextService,
     @Inject('RAHAT_CLIENT') private readonly client: ClientProxy
   ) { }
 
-  async create(data: CreateProjectDto) {
-    // TODO: refactor to proper validator
-    // switch (data.type) {
-    //   case 'AA':
-    //     SettingsService.get('AA')
-    //     break;
-    //   case 'CVA':
-    //     SettingsService.get('CVA')
-    //     break;
-    //   case 'EL':
-    //     SettingsService.get('EL')
-    //     break;
-    //   default:
-    //     throw new Error('Invalid project type.')
-    // }
+  getRegistryInfo(query: RolePermsRegistryQueryDto) {
+    const { project, name } = query;
+    const registryData = ROLE_PERMS_REGISTRY[project];
+    if (!registryData) throw new Error('Project not found. Allowed projects are [el,cva,aa]');
+    if (name) {
+      const data = registryData[name];
+      if (!data) throw new Error('Data not found. Allowed names are [roles,subjects]');
+      return data;
+    }
+  }
 
-    const project = await this.prisma.project.create({
-      data,
+  async getRole(txn: PrismaClient, role: string, scope: string) {
+    const d = await txn.role.findUnique({
+      where: {
+        'roleIdentifier': { name: role, scope }
+      }
     });
+    if (!d) throw new Error('Role not found');
+    return d;
+  }
 
-    this.eventEmitter.emit(ProjectEvents.PROJECT_CREATED, project);
+  async deleteExistingPerms(txn: PrismaClient, roleId: number) {
+    return txn.permission.deleteMany({ where: { roleId } })
+  }
 
-    return project;
+  async updateRolesAndPerms(scope: string, dto: UpdateRolePermsDto) {
+    const { role, permissions } = dto;
+    return this.prisma.$transaction(async (txn: PrismaClient) => {
+      const existingRole = await this.getRole(txn, role, scope);
+      await this.deleteExistingPerms(txn, existingRole.id);
+      await this.createPermissions(txn, existingRole.id, permissions)
+      return existingRole;
+    })
+  }
+
+  async createPermissions(txn: PrismaClient, roleId: number, permissions: PermissionSet) {
+    const permissionsData = [];
+    for (const subject in permissions) {
+      for (const action of permissions[subject]) {
+        permissionsData.push({
+          roleId,
+          subject,
+          action,
+        });
+      }
+    }
+    return txn.permission.createMany({
+      data: permissionsData,
+    });
+  }
+
+  async createRolesAndPerms(txn: PrismaClient, roles: IRole[]) {
+    const payloads = [];
+    for (let r of roles) {
+      const { permissions, ...rest } = r;
+      const created = await txn.role.create({ data: rest });
+
+      for (const [subject, actions] of Object.entries(permissions)) {
+        for (const action of actions) {
+          payloads.push({ subject, action, roleId: created.id });
+        }
+      }
+    }
+
+    return txn.permission.createMany({ data: payloads });
+  }
+
+
+  async create(dto: CreateProjectDto) {
+    const registryData = ROLE_PERMS_REGISTRY[dto.type];
+    if (!registryData) throw new Error('Roles & permissions not found for this type');
+    const { roles } = registryData;
+
+    return this.prisma.$transaction(async (txn: PrismaClient) => {
+      const project = await txn.project.create({
+        data: dto,
+      });
+      if (roles.length) {
+        const rolesPayload = roles.map((r: IRole) => {
+          return { ...r, scope: project.uuid }
+        });
+        await this.createRolesAndPerms(txn, rolesPayload)
+      }
+      this.eventEmitter.emit(ProjectEvents.PROJECT_CREATED, project);
+      return project;
+    })
   }
 
   async list() {
@@ -126,12 +190,11 @@ export class ProjectService {
   }
 
   async sendCommand(cmd, payload, timeoutValue = MS_TIMEOUT, client: ClientProxy, action: string) {
-    const user = this.requestContextService.getUser()
+    console.log("P", payload)
     const requiresUser = userRequiredActions.has(action)
-
     return client.send(cmd, {
       ...payload,
-      ...(requiresUser && { user })
+      ...(requiresUser && { user: payload.cu })
     }).pipe(
       timeout(timeoutValue),
       tap((response) => {
@@ -168,7 +231,28 @@ export class ProjectService {
 
   }
 
+  async checkOnchainRole(currentRoles: string[]) {
+    let onChain = false;
+    const rows = await this.prisma.role.findMany({
+      where: {
+        name: { in: currentRoles }
+      }
+    });
+    if (!rows.length) return onChain;
+    for (let r of rows) {
+      if (r.onChain) {
+        onChain = true;
+        break;
+      }
+    }
+
+    return onChain;
+  }
+
   async handleProjectActions({ uuid, action, payload }) {
+    let currentUser = payload.cu;
+    currentUser.onChain = await this.checkOnchainRole(currentUser.roles);
+    payload.cu = currentUser;
     console.log({ uuid, action, payload })
     //Note: This is a temporary solution to handle metaTx actions
     const metaTxActions = {
@@ -178,7 +262,6 @@ export class ProjectService {
       [MS_ACTIONS.ELPROJECT.ASSIGN_DISCOUNT_VOUCHER]: async () => await this.executeMetaTxRequest(payload),
       [MS_ACTIONS.ELPROJECT.REQUEST_REDEMPTION]: async () => await this.executeMetaTxRequest(payload),
     };
-
 
     const actions = {
       ...projectActions,

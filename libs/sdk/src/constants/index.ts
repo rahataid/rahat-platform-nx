@@ -31,8 +31,8 @@ export const SUBJECTS = {
   ALL: 'all',
   BENEFICIARY: 'beneficiary',
   PROJECT: 'project',
+  PUBLIC: 'public',
   VENDOR: 'vendor',
-  PUBLIC: 'public'
 };
 
 export const APP = {

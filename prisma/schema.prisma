@@ -50,8 +50,10 @@ enum Gender {
 // =================== Role Module ==================
 model Role {
   id       Int       @unique @default(autoincrement())
-  name     String    @unique @db.VarChar()
+  name     String    @db.VarChar()
   isSystem Boolean   @default(false)
+  onChain  Boolean   @default(false)
+  scope    String    @default("CORE")    
   expiry   DateTime?
 
   Permission Permission[]
@@ -62,6 +64,7 @@ model Role {
   createdBy Int?
   updatedBy Int?
 
+  @@unique([name, scope], name: "roleIdentifier")
   @@map("tbl_auth_roles")
 }
 

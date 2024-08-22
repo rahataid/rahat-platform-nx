@@ -2,6 +2,14 @@ import { OmitType, PartialType } from '@nestjs/mapped-types';
 import { ApiProperty } from '@nestjs/swagger';
 import { ProjectStatus } from '@rahataid/sdk/enums';
 import { IsObject, IsOptional, IsString } from 'class-validator';
+import { PermissionSet } from './update-role-perms.dto';
+
+export interface IRole {
+  name: string,
+  onChain: boolean,
+  isSystem: boolean,
+  permissions?: PermissionSet
+}
 
 export class CreateProjectDto {
   @ApiProperty({
